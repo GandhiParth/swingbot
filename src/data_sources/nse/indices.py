@@ -13,14 +13,12 @@ from config.data_sources.nse import (
     IndexConfig,
 )
 
-logger = logging.getLogger(__name__)
-
 
 class IndexDownloader:
     def __init__(self, download_path: str):
 
-        self.download_path = Path(download_path)
-        self.download_path.mkdir(parents=True, exist_ok=True)
+        self._download_path = Path(download_path)
+        self._download_path.mkdir(parents=True, exist_ok=True)
 
         self.session = requests.Session()
         self.session.headers.update(
@@ -39,12 +37,18 @@ class IndexDownloader:
     )
     def download(self, config: IndexConfig):
         if config.source == DownloadSoure.NSE:
-            self._download_from_nse(config)
-            self.logger.info(f"{config.name} downlloaded successfully")
+            try:
+                self._download_from_nse(config)
+                self.logger.info(f"{config.name} downloaded successfully")
+            except Exception as e:
+                self.logger.error(f"{config.name} download failed. Error: {e}")
 
         elif config.source == DownloadSoure.NSE_INDICES:
-            self._download_from_nse_indices(config)
-            self.logger.info(f"{config.name} downlloaded successfully")
+            try:
+                self._download_from_nse_indices(config)
+                self.logger.info(f"{config.name} downloaded successfully")
+            except Exception as e:
+                self.logger.error(f"{config.name} download failed. Error: {e}")
 
         else:
             raise ValueError("Unsupported source")
@@ -68,7 +72,7 @@ class IndexDownloader:
         file_response = self.session.get(file_url)
         file_response.raise_for_status()
 
-        file_path = self.download_path / config.filename
+        file_path = self._download_path / config.filename
 
         with open(file_path, "wb") as f:
             f.write(file_response.content)
@@ -90,6 +94,7 @@ class IndexDownloader:
         file_response = self.session.get(absolute_url)
         file_response.raise_for_status()
 
-        file_path = self.download_path / config.filename
+        file_path = self._download_path / config.filename
+
         with open(file_path, "wb") as f:
             f.write(file_response.content)
