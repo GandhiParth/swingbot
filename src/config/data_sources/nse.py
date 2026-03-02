@@ -59,12 +59,6 @@ SECTOR_INDICES = [
         source=DownloadSoure.NSE_INDICES,
     ),
     IndexConfig(
-        name="NIFTY_FINANCIAL_SERVICES_EX_BANK",
-        url="https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-financial-services-ex-bank",
-        filename="nse_index_nifty_financial_services_ex_bank.csv",
-        source=DownloadSoure.NSE_INDICES,
-    ),
-    IndexConfig(
         name="NIFTY_FMCG",
         url="https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-fmcg",
         filename="nse_index_nifty_fmcg.csv",

@@ -39,14 +39,14 @@ class IndexDownloader:
         if config.source == DownloadSoure.NSE:
             try:
                 self._download_from_nse(config)
-                self.logger.info(f"{config.name} downloaded successfully")
+                self.logger.debug(f"{config.name} downloaded successfully")
             except Exception as e:
                 self.logger.error(f"{config.name} download failed. Error: {e}")
 
         elif config.source == DownloadSoure.NSE_INDICES:
             try:
                 self._download_from_nse_indices(config)
-                self.logger.info(f"{config.name} downloaded successfully")
+                self.logger.debug(f"{config.name} downloaded successfully")
             except Exception as e:
                 self.logger.error(f"{config.name} download failed. Error: {e}")
 
