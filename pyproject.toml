@@ -1,0 +1,11 @@
+[project]
+name = "swingbot"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "polars>=1.38.1",
+    "selenium>=4.41.0",
+    "streamlit>=1.54.0",
+]
