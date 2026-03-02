@@ -1,0 +1,95 @@
+import logging
+from pathlib import Path
+from urllib.parse import urljoin
+
+import requests
+from bs4 import BeautifulSoup
+from ratelimit import limits, sleep_and_retry
+
+from config.data_sources.nse import (
+    INDICES_DOWNLOAD_RATE_LIMIT,
+    NSE_URL,
+    DownloadSoure,
+    IndexConfig,
+)
+
+logger = logging.getLogger(__name__)
+
+
+class IndexDownloader:
+    def __init__(self, download_path: str):
+
+        self.download_path = Path(download_path)
+        self.download_path.mkdir(parents=True, exist_ok=True)
+
+        self.session = requests.Session()
+        self.session.headers.update(
+            {
+                "User-Agent": "Mozilla/5.0",
+                "Accept-Language": "en-US,en;q=0.9",
+            }
+        )
+
+        self.logger = logging.getLogger(self.__class__.__name__)
+
+    @sleep_and_retry
+    @limits(
+        calls=INDICES_DOWNLOAD_RATE_LIMIT.calls,
+        period=INDICES_DOWNLOAD_RATE_LIMIT.period,
+    )
+    def download(self, config: IndexConfig):
+        if config.source == DownloadSoure.NSE:
+            self._download_from_nse(config)
+            self.logger.info(f"{config.name} downlloaded successfully")
+
+        elif config.source == DownloadSoure.NSE_INDICES:
+            self._download_from_nse_indices(config)
+            self.logger.info(f"{config.name} downlloaded successfully")
+
+        else:
+            raise ValueError("Unsupported source")
+
+    def _download_from_nse(self, config: IndexConfig):
+
+        self.session.get(NSE_URL)
+
+        response = self.session.get(config.url)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        link = soup.find("a", href=lambda h: h and h.endswith(".csv"))
+
+        if not link:
+            raise ValueError("CSV link not found")
+
+        file_url = link["href"]
+
+        file_response = self.session.get(file_url)
+        file_response.raise_for_status()
+
+        file_path = self.download_path / config.filename
+
+        with open(file_path, "wb") as f:
+            f.write(file_response.content)
+
+    def _download_from_nse_indices(self, config: IndexConfig):
+        response = self.session.get(config.url)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        link = soup.find("a", string="Index Constituent")
+
+        if not link:
+            raise ValueError("Index Constituent link not found")
+
+        relative_href = link["href"]
+        absolute_url = urljoin(config.url, relative_href)
+
+        file_response = self.session.get(absolute_url)
+        file_response.raise_for_status()
+
+        file_path = self.download_path / config.filename
+        with open(file_path, "wb") as f:
+            f.write(file_response.content)
