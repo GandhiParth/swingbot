@@ -13,7 +13,9 @@ class KiteHistorical:
     Gets Historical Data from Kite
     """
 
-    def __init__(self, kite: KiteConnect, file_location: str, config: object) -> None:
+    def __init__(
+        self, kite: KiteConnect, instruments_df: pl.DataFrame, config: object
+    ) -> None:
         """
         Initializes the KiteHistorical class.
 
@@ -23,7 +25,8 @@ class KiteHistorical:
         config_location (str): Path to the Kite INI configuration file.
         """
         self._kite = kite
-        self._file_location = file_location
+        self._instrumments_df = instruments_df
+
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self._config = config
@@ -245,11 +248,11 @@ class KiteHistorical:
             "60minute",
             "day",
         ],
-        oi_flag: bool,
-        continuous_flag: bool,
         db_conn: str,
         insert_table_name: str,
         failed_table_name: str,
+        oi_flag: bool = False,
+        continuous_flag: bool = False,
     ) -> None:
         """
         Fetches historical data for all instruments listed in the provided CSV file and writes the data to a database table.
@@ -265,13 +268,7 @@ class KiteHistorical:
         self._table_name = insert_table_name
         self._conn = db_conn
 
-        symbol_tokens = (
-            pl.scan_parquet(source=self._file_location)
-            .select("symbol", "instrument_token")
-            .sort("symbol")
-            .collect()
-            .rows()
-        )
+        symbol_tokens = self._instrumments_df.rows()
 
         self.logger.info(f"""Number of Tokens are {len(symbol_tokens)}""")
 

@@ -29,7 +29,7 @@ def fetch_instruments(
     Parameters:
     kite (KiteConnect): KiteConnect object ot fetch the instrument list
     download_path (str): The path to download the instruments list
-    exchanges List[str]: List of exchnages to download for.
+    exchanges str: Exchnage to download for.
     """
 
     ins_schema = {
