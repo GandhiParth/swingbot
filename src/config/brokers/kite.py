@@ -22,3 +22,5 @@ class KiteConfig:
     API_RATE_LIMIT_SECONDS = {"quote": 1, "historical": 3, "order": 10, "others": 10}
 
     TICKER_LIMIT = {"max_tokens": 3000}
+
+    OHLCV_INSERT_TBL = "kite_ohlcv_day"
