@@ -49,7 +49,7 @@ class NSEConfig(EditConfig):
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NIFTY CHEMICAL",
+            name="NSE INDEX NIFTY CHEMICALS",
             url="https://niftyindices.com/indices/equity/sectoral-indices/nifty-chemicals",
             filename="nse_index_nifty_chemical.csv",
             source=DownloadSoure.NSE_INDICES,
@@ -61,7 +61,7 @@ class NSEConfig(EditConfig):
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NIFTY FINANCIAL SERVICES 25/50",
+            name="NIFTY FINSRV25 50",
             url="https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-financial-services-25-50-index",
             filename="nse_index_nifty_financial_services_25_50.csv",
             source=DownloadSoure.NSE_INDICES,
@@ -103,7 +103,7 @@ class NSEConfig(EditConfig):
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NIFTY PRIVATE BANK",
+            name="NIFTY PVT BANK",
             url="https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-private-bank",
             filename="nse_index_nifty_private_bank.csv",
             source=DownloadSoure.NSE_INDICES,
@@ -127,25 +127,25 @@ class NSEConfig(EditConfig):
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NIFTY CONSUMER DURABLES",
+            name="NIFTY CONSR DURBL",
             url="https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-consumer-durables-index",
             filename="nse_index_nifty_consumer_durables.csv",
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NIFTY OIL GAS",
+            name="NIFTY OIL AND GAS",
             url="https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-oil-and-gas-index",
             filename="nse_index_nifty_oil_gas.csv",
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NIFTY 500 HEALTHCARE",
+            name="NIFTY500 HEALTH",
             url="https://niftyindices.com/indices/equity/sectoral-indices/nifty500-healthcare",
             filename="nse_index_nifty_500_healthcare.csv",
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NIFTY MID SMALL FINANCIAL SERVICES",
+            name="NIFTY MIDSMALL FINANCIAL SERVICES",
             url="https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-midsmall-financial-services",
             filename="nse_index_nifty_mid_small_financial_services.csv",
             source=DownloadSoure.NSE_INDICES,
@@ -157,7 +157,7 @@ class NSEConfig(EditConfig):
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NIFTY MID SMALL IT TELECOM",
+            name="NIFTY MIDSMALL IT & TELECOM",
             url="https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-midsmall-it-telecom",
             filename="nse_index_nifty_mid_small_it_telecom.csv",
             source=DownloadSoure.NSE_INDICES,
@@ -190,7 +190,7 @@ class NSEConfig(EditConfig):
             source=DownloadSoure.NSE,
         ),
         IndexConfig(
-            name="NIFTY TOTAL MARKET",
+            name="NIFTY TOTAL MKT",
             url="https://www.nseindia.com/static/products-services/indices-nifty-total-market-index",
             filename="nse_index_nifty_total_market.csv",
             source=DownloadSoure.NSE,
@@ -202,13 +202,13 @@ class NSEConfig(EditConfig):
             source=DownloadSoure.NSE,
         ),
         IndexConfig(
-            name="NIFTY 500 MULTICAP 50:25:25",
+            name="NIFTY500 MULTICAP",
             url="https://www.nseindia.com/static/products-services/indices-nifty500-multicap-50-25-25-index",
             filename="nse_index_nifty_500_multicap_50_25_25.csv",
             source=DownloadSoure.NSE,
         ),
         IndexConfig(
-            name="NIFTY SMALLCAP 250",
+            name="NIFTY SMLCAP 250",
             url="https://www.nseindia.com/static/products-services/indices-niftysmallcap250-index",
             filename="nse_index_nifty_smallcap_250.csv",
             source=DownloadSoure.NSE,

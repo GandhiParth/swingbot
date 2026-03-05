@@ -1,7 +1,14 @@
 from pathlib import Path
+from config.base import StorageConfig
 
 
-class KiteConfig:
+class EditConfig:
+    DATA_PATH = StorageConfig().tmp_root("kite")
+    DB_PATH = DATA_PATH / "data.db"
+    DB_CONN = f"sqlite:///{DB_PATH}"
+
+
+class KiteConfig(EditConfig):
     NAME = "KITE"
 
     CREDENTIALS_PATH = Path("/home/parthgandhi/.conf/credentials/kite.ini")
@@ -23,4 +30,10 @@ class KiteConfig:
 
     TICKER_LIMIT = {"max_tokens": 3000}
 
-    OHLCV_INSERT_TBL = "kite_ohlcv_day"
+    TYP_INDICES = "indices"
+    TYP_STOCKS = "stocks"
+
+    @staticmethod
+    def get_db_tbl(data_type: str, frequency: str, failed_tbl: bool):
+        prefix = "failed_" if failed_tbl else ""
+        return f"{prefix}kite_{data_type}_ohlcv_{frequency}"

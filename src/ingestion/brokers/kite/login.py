@@ -1,7 +1,7 @@
 import logging
 import time
 
-from brokers.exceptions import KiteError
+from ingestion.brokers.exceptions import KiteError
 from kiteconnect import KiteConnect
 from pyotp import TOTP
 from selenium import webdriver

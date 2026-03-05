@@ -5,7 +5,9 @@ import polars as pl
 
 from config.ingestion.data_sources import NSEConfig
 from ingestion.data_sources.nse import NSEIndexDownloader
-from utils import setup_logger
+from kiteconnect import KiteConnect
+from ingestion.brokers.kite import KiteHistorical
+from config.ingestion.brokers import KiteConfig
 
 logger = logging.getLogger(__name__)
 
@@ -70,3 +72,43 @@ def fetch_nse_indices(download_flag: bool = True) -> pl.DataFrame:
     )
 
     return indices_df
+
+
+def fetch_nse_indices_data(
+    kite: KiteConnect,
+    instruments_df: pl.DataFrame,
+    indices_lst: list,
+    start_date: str,
+    end_date: str,
+    frequency: str,
+):
+
+    kite_indices = (
+        instruments_df.filter(pl.col("name").is_in(indices_lst))
+        .get_column("name")
+        .to_list()
+    )
+
+    logger.warning(
+        f"Following Indices not Mapped with Kite Instruments: {list(set(indices_lst) - set(kite_indices))}"
+    )
+
+    index_fetch_df = instruments_df.filter(pl.col("name").is_in(indices_lst)).select(
+        "symbol", "instrument_token"
+    )
+
+    kite_hist = KiteHistorical(
+        kite=kite, instruments_df=index_fetch_df, config=KiteConfig
+    )
+    kite_hist.get_historical_data(
+        start_date=start_date,
+        end_date=end_date,
+        frequency=frequency,
+        db_conn=KiteConfig.DB_CONN,
+        insert_table_name=KiteConfig.get_db_tbl(
+            KiteConfig.TYP_INDICES, frequency=frequency, failed_tbl=False
+        ),
+        failed_table_name=KiteConfig.get_db_tbl(
+            KiteConfig.TYP_INDICES, frequency=frequency, failed_tbl=True
+        ),
+    )
