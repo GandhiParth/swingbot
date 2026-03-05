@@ -5,12 +5,15 @@ from config.base import RateLimitConfig, StorageConfig
 
 
 class EditConfig:
-    # Path Where Indices are Downloaded
-    INDICES_DOWNLOAD_PATH = StorageConfig().tmp_root("nse", "indices")
+    # Paths
+    TMP_DATA_PATH = StorageConfig().tmp_root("nse")
+    STORE_DATA_PATH = StorageConfig().store_root("nse")
+    INDICES_DOWNLOAD_PATH = TMP_DATA_PATH / "indices"
+    DB_PATH = STORE_DATA_PATH / "data.db"
+    DB_CONN = f"sqlite:///{DB_PATH}"
 
     # Table ID where Industry Classification is Downloaded
     CLASSIFICATION_TABLE_ID = "industry_classification"
-    FAILED_CLASSIFICATION_TABLE_ID = "industry_classification_failed"
 
 
 class DownloadSoure(Enum):
@@ -214,3 +217,8 @@ class NSEConfig(EditConfig):
             source=DownloadSoure.NSE,
         ),
     ]
+
+    @staticmethod
+    def get_db_tbl(tbl_name: str, failed_tbl: bool):
+        prefix = "failed_" if failed_tbl else ""
+        return f"{prefix}nse_{tbl_name}"
