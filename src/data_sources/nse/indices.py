@@ -6,12 +6,8 @@ import requests
 from bs4 import BeautifulSoup
 from ratelimit import limits, sleep_and_retry
 
-from config.data_sources.nse import (
-    INDICES_DOWNLOAD_RATE_LIMIT,
-    NSE_URL,
-    DownloadSoure,
-    IndexConfig,
-)
+from config.data_sources import NSEConfig
+from config.data_sources.nse import DownloadSoure, IndexConfig
 
 
 class IndexDownloader:
@@ -32,8 +28,8 @@ class IndexDownloader:
 
     @sleep_and_retry
     @limits(
-        calls=INDICES_DOWNLOAD_RATE_LIMIT.calls,
-        period=INDICES_DOWNLOAD_RATE_LIMIT.period,
+        calls=NSEConfig.INDICES_DOWNLOAD_RATE_LIMIT.calls,
+        period=NSEConfig.INDICES_DOWNLOAD_RATE_LIMIT.period,
     )
     def download(self, config: IndexConfig):
         if config.source == DownloadSoure.NSE:
@@ -55,7 +51,7 @@ class IndexDownloader:
 
     def _download_from_nse(self, config: IndexConfig):
 
-        self.session.get(NSE_URL)
+        self.session.get(NSEConfig.NSE_URL)
 
         response = self.session.get(config.url)
         response.raise_for_status()

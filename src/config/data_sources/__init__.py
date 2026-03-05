@@ -1,3 +1,3 @@
-from .nse import MARKET_INDICES, SECTOR_INDICES
+from .nse import NSEConfig
 
-__all__ = ["SECTOR_INDICES", "MARKET_INDICES"]
+__all__ = ["NSEConfig"]
