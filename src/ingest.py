@@ -64,6 +64,8 @@ def fetch_nse_indices(download_flag: bool = True) -> pl.DataFrame:
         except Exception as e:
             logger.error(f"Failed for {file}. Error: {e}")
 
+    logger.info(f"Fetched Indices Data for {len(dfs)}/{mapping_df.collect().height}")
+
     indices_df = (
         pl.concat(dfs)
         .join(mapping_df, on="filename", how="left")
@@ -110,5 +112,53 @@ def fetch_nse_indices_data(
         ),
         failed_table_name=KiteConfig.get_db_tbl(
             KiteConfig.TYP_INDICES, frequency=frequency, failed_tbl=True
+        ),
+    )
+
+
+def fetch_nse_stocks_data(
+    kite: KiteConnect,
+    instruments_df: pl.DataFrame,
+    start_date: str,
+    end_date: str,
+    frequency: str,
+):
+
+    stocks_fetch_df = (
+        instruments_df.lazy()
+        .filter(
+            (pl.col("segment") == "NSE")
+            & (pl.col("name").str.len_chars() > 0)
+            & (~pl.col("symbol").str.ends_with("INAV"))
+        )
+        .with_columns(
+            pl.col("symbol")
+            .str.split(by="-")
+            .list.get(index=1, null_on_oob=True)
+            .fill_null("EQ")
+            .alias("suffix")
+        )
+        .filter(pl.col("suffix").is_in(["EQ"]))
+        .collect()
+    )
+
+    _write_filename = KiteConfig.DATA_PATH / "fetched_stocks.csv"
+    stocks_fetch_df.write_csv(_write_filename)
+
+    stocks_fetch_df = stocks_fetch_df.select("symbol", "instrument_token")
+
+    kite_hist = KiteHistorical(
+        kite=kite, instruments_df=stocks_fetch_df, config=KiteConfig
+    )
+    kite_hist.get_historical_data(
+        start_date=start_date,
+        end_date=end_date,
+        frequency=frequency,
+        db_conn=KiteConfig.DB_CONN,
+        insert_table_name=KiteConfig.get_db_tbl(
+            KiteConfig.TYP_STOCKS, frequency=frequency, failed_tbl=False
+        ),
+        failed_table_name=KiteConfig.get_db_tbl(
+            KiteConfig.TYP_STOCKS, frequency=frequency, failed_tbl=True
         ),
     )
