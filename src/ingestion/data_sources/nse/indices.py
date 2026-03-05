@@ -11,7 +11,7 @@ from config.ingestion.data_sources.nse import DownloadSoure, IndexConfig
 
 
 class NSEIndexDownloader:
-    def __init__(self, download_path: str = NSEConfig.INDICES_DOWNLOAD_PATH):
+    def __init__(self, download_path: str):
 
         self._download_path = Path(download_path)
         self._download_path.mkdir(parents=True, exist_ok=True)
@@ -25,6 +25,7 @@ class NSEIndexDownloader:
         )
 
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.info(f"NSE Indices Download Path: {self._download_path}")
 
     @sleep_and_retry
     @limits(
