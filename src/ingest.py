@@ -2,12 +2,12 @@ import logging
 from pathlib import Path
 
 import polars as pl
-
-from config.ingestion.data_sources import NSEConfig
-from ingestion.data_sources.nse import NSEIndexDownloader
 from kiteconnect import KiteConnect
-from ingestion.brokers.kite import KiteHistorical
+
 from config.ingestion.brokers import KiteConfig
+from config.ingestion.data_sources import NSEConfig
+from ingestion.brokers.kite import KiteHistorical
+from ingestion.data_sources.nse import NSEIndexDownloader
 
 logger = logging.getLogger(__name__)
 
@@ -79,11 +79,13 @@ def fetch_nse_indices(download_flag: bool = True) -> pl.DataFrame:
 def fetch_nse_indices_data(
     kite: KiteConnect,
     instruments_df: pl.DataFrame,
-    indices_lst: list,
+    nse_indices_df: pl.DataFrame,
     start_date: str,
     end_date: str,
     frequency: str,
 ):
+
+    indices_lst = nse_indices_df.get_column("index_name").unique().to_list()
 
     kite_indices = (
         instruments_df.filter(pl.col("name").is_in(indices_lst))
