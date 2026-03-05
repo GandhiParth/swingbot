@@ -1,7 +1,16 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from config.base import RateLimitConfig
+from config.base import RateLimitConfig, StorageConfig
+
+
+class EditConfig:
+    # Path Where Indices are Downloaded
+    INDICES_DOWNLOAD_PATH = StorageConfig().tmp_root("nse", "indices")
+
+    # Table ID where Industry Classification is Downloaded
+    CLASSIFICATION_TABLE_ID = "industry_classification"
+    FAILED_CLASSIFICATION_TABLE_ID = "industry_classification_failed"
 
 
 class DownloadSoure(Enum):
@@ -17,13 +26,9 @@ class IndexConfig:
     source: DownloadSoure
 
 
-class NSEConfig:
-    CLASSIFICATION_TABLE_ID = "industry_classification"
-
-    FAILED_CLASSIFICATION_TABLE_ID = "industry_classification_failed"
-
+class NSEConfig(EditConfig):
+    NSE_URL = "https://www.nseindia.com"
     INDICES_DOWNLOAD_RATE_LIMIT = RateLimitConfig(calls=1, period=10)
-
     SECTOR_INDICES = [
         IndexConfig(
             name="NIFTY_AUTO",

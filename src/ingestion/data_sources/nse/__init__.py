@@ -1,3 +1,3 @@
-from .indices import IndexDownloader
+from .indices import NSEIndexDownloader
 
-__all__ = ["IndexDownloader"]
+__all__ = ["NSEIndexDownloader"]

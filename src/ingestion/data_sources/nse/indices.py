@@ -6,12 +6,12 @@ import requests
 from bs4 import BeautifulSoup
 from ratelimit import limits, sleep_and_retry
 
-from config.data_sources import NSEConfig
-from config.data_sources.nse import DownloadSoure, IndexConfig
+from config.ingestion.data_sources import NSEConfig
+from config.ingestion.data_sources.nse import DownloadSoure, IndexConfig
 
 
-class IndexDownloader:
-    def __init__(self, download_path: str):
+class NSEIndexDownloader:
+    def __init__(self, download_path: str = NSEConfig.INDICES_DOWNLOAD_PATH):
 
         self._download_path = Path(download_path)
         self._download_path.mkdir(parents=True, exist_ok=True)
