@@ -2,9 +2,9 @@ from datetime import datetime
 
 import polars as pl
 
-from config.computation.indicator import IndicatorConfig
-from config.computation.compute import ComputeConfig
 from computation.scanner import prep_scan_data
+from config.computation.compute import ComputeConfig
+from config.computation.indicator import IndicatorConfig
 
 
 def gen_market_dashboard_data(
@@ -144,7 +144,7 @@ def gen_market_breadth_data(stocks_df: pl.DataFrame):
         .with_columns(
             (pl.col(col) * 100 / pl.col("# Stocks"))
             .round(2)
-            .alias(f"% {col.replace("_", " ").upper()}")
+            .alias(f"% {col.replace('_', ' ').upper()}")
             for col in ["UP 4.5% 1D", "DOWN 4.5% 1D"]
             + [f"above_ema_{i}" for i in IndicatorConfig.EMA_DAYS]
             + [f"above_sma_{i}" for i in IndicatorConfig.SMA_DAYS]

@@ -4,7 +4,7 @@ from datetime import datetime
 
 import polars as pl
 
-from computation.compute import gen_market_dashboard_data, gen_market_breadth_data
+from computation.compute import gen_market_breadth_data, gen_market_dashboard_data
 from config.base import StorageConfig
 from config.computation.compute import ComputeConfig
 from config.ingestion.brokers import KiteConfig
@@ -83,4 +83,4 @@ if __name__ == "__main__":
     # Get Market Breadth Data
 
     mkt_breadth_df = gen_market_breadth_data(stocks_df=stocks_df)
-    mkt_breadth_df.sink_csv(save_path / ComputeConfig.MKR_BREADTH_PATH)
+    mkt_breadth_df.sink_csv(save_path / ComputeConfig.MKT_BREADTH_PATH)

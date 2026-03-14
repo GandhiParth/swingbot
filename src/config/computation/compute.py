@@ -12,4 +12,4 @@ class ComputeConfig(EditConfig):
     MKT_DB_INDICES_PATH = "market_dashboard_indices_data.csv"
 
     MKT_BREADTH_DAYS = 10
-    MKR_BREADTH_PATH = "market_breadth_lookback_data.csv"
+    MKT_BREADTH_PATH = "market_breadth_lookback_data.csv"

@@ -26,3 +26,16 @@ def load_mkt_db_data(date: str):
     indices_df = pl.read_csv(path / ComputeConfig.MKT_DB_INDICES_PATH)
 
     return indices_df, stocks_df
+
+
+@st.cache_data
+def load_mkt_breadth_data(date: str):
+    """
+    Loads the Data for the Market Dashboard
+    """
+
+    path = ComputeConfig.DATA_PATH / date
+
+    mkt_breadth_df = pl.read_csv(path / ComputeConfig.MKT_BREADTH_PATH)
+
+    return mkt_breadth_df

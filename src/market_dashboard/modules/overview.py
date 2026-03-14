@@ -73,7 +73,7 @@ def render_index_table(indices_df: pl.DataFrame):
         .format({c: "{:.2f}" for c in round_cols})
     )
 
-    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+    st.dataframe(styled_df, width="stretch", hide_index=True)
 
 
 def render_constituents_table(stocks_df: pl.DataFrame):
@@ -128,7 +128,7 @@ def render_constituents_table(stocks_df: pl.DataFrame):
     )
 
     if not constituents.is_empty():
-        st.dataframe(styled_df, use_container_width=True, hide_index=True)
+        st.dataframe(styled_df, width="stretch", hide_index=True)
     else:
         st.info("No constituents available.")
 
@@ -182,7 +182,7 @@ def render_heatmap(stocks_df: pl.DataFrame):
 
                 fig.update_layout(margin=dict(t=0, l=0, r=0, b=0), height=350)
 
-                st.plotly_chart(fig, use_container_width=True, key=f"heatmap_{index}")
+                st.plotly_chart(fig, width="stretch", key=f"heatmap_{index}")
 
 
 # ------------------------------------------------
