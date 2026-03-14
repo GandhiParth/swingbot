@@ -3,7 +3,8 @@ import logging
 from datetime import datetime, timedelta
 
 from config.ingestion.brokers import KiteConfig
-from ingestion import fetch_nse_indices, fetch_nse_indices_data, fetch_nse_stocks_data
+from ingestion import (fetch_nse_indices, fetch_nse_indices_data,
+                       fetch_nse_stocks_data)
 from ingestion.brokers.kite import KiteLogin, fetch_instruments
 from utils import setup_logger, to_datetime_str
 

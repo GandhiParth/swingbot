@@ -9,6 +9,7 @@ def gen_market_dashboard_data(
     nse_indices_df: pl.DataFrame,
     indices_df: pl.DataFrame,
     stocks_df: pl.DataFrame,
+    nse_ind_df: pl.DataFrame,
     scan_date: datetime,
 ):
     _select_cols = [
@@ -25,11 +26,13 @@ def gen_market_dashboard_data(
     ]
 
     indices_data_list = indices_df.get_column("symbol").unique().to_list()
+    nse_ind_df = nse_ind_df.lazy().select("symbol", "market_cap_cr")
 
     indices_stock_data = (
         nse_indices_df.lazy()
         .filter(pl.col("index_name").is_in(indices_data_list))
         .join(stocks_df.lazy(), on="symbol", how="left")
+        .join(nse_ind_df, on="symbol", how="left")
         .with_columns(pl.col("timestamp").cast(pl.Date()))
         .with_columns(
             # Shift Columns
@@ -60,7 +63,7 @@ def gen_market_dashboard_data(
             ]
         )
         .filter(pl.col("timestamp") == scan_date)
-        .select(_select_cols)
+        .select(_select_cols + ["market_cap_cr"])
         .sort(["index_type", "index_name", "1W"], descending=[False, False, True])
     )
 

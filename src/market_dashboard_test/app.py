@@ -1,4 +1,7 @@
 import streamlit as st
+from modules.breadth import render as render_breadth
+from modules.overview import render as render_overview
+from modules.scanner import render as render_scanner
 from services.data_loader import load_market_data
 
 # --------------------------------------------------

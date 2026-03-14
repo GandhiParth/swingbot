@@ -1,8 +1,9 @@
-from utils import setup_logger
+import argparse
+
+from config.ingestion.brokers import KiteConfig
 from ingestion.brokers.kite import KiteLogin, fetch_instruments
 from ingestion.data_sources.nse import fetch_nse_industry_classification
-from config.ingestion.brokers import KiteConfig
-import argparse
+from utils import setup_logger
 
 setup_logger()
 
