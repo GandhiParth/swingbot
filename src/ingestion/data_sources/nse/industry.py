@@ -252,8 +252,9 @@ def fetch_nse_industry_classification(
             df = pl.DataFrame([data])
 
             df.write_database(
-                table_name=NSEConfig.CLASSIFICATION_TABLE_ID,
-                failed_tbl=True,
+                table_name=NSEConfig.get_db_tbl(
+                    tbl_name=NSEConfig.CLASSIFICATION_TABLE_ID, failed_tbl=False
+                ),
                 connection=NSEConfig.DB_CONN,
                 if_table_exists="append",
             )
