@@ -65,11 +65,12 @@ def render_index_table(indices_df: pl.DataFrame):
     )
 
     return_cols = ["1D", "1W", "1M", "3M", "6M"]
+    round_cols = return_cols + ["Close"]
 
     styled_df = (
         display_df.to_pandas()
         .style.map(color_returns, subset=return_cols)
-        .format({c: "{:.2f}" for c in return_cols})
+        .format({c: "{:.2f}" for c in round_cols})
     )
 
     st.dataframe(styled_df, use_container_width=True, hide_index=True)
@@ -119,10 +120,11 @@ def render_constituents_table(stocks_df: pl.DataFrame):
     )
 
     return_cols = ["1D", "1W", "1M", "3M", "6M"]
+    round_cols = return_cols + ["Close"]
 
     display_df = constituents.to_pandas()
     styled_df = display_df.style.map(color_returns, subset=return_cols).format(
-        {c: "{:.2f}" for c in return_cols}
+        {c: "{:.2f}" for c in round_cols}
     )
 
     if not constituents.is_empty():
@@ -161,15 +163,21 @@ def render_heatmap(stocks_df: pl.DataFrame):
             with col:
                 st.subheader(index)
 
-                stocks = stocks_df.filter((pl.col("index_name") == index))
+                stocks = stocks_df.filter((pl.col("index_name") == index)).to_pandas()
 
                 fig = px.treemap(
-                    stocks.to_pandas(),
+                    stocks,
                     path=["symbol"],
                     values="market_cap_cr",
                     color=st.session_state.selected_heatmap_period,
                     color_continuous_scale="RdYlGn",
                     color_continuous_midpoint=0,
+                )
+
+                fig.update_traces(
+                    text=stocks[st.session_state.selected_heatmap_period],
+                    texttemplate="%{label}<br>%{text:.2f}%",
+                    textfont_size=13,
                 )
 
                 fig.update_layout(margin=dict(t=0, l=0, r=0, b=0), height=350)
