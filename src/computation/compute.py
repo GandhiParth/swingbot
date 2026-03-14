@@ -65,6 +65,7 @@ def gen_market_dashboard_data(
         .filter(pl.col("timestamp") == scan_date)
         .select(_select_cols + ["market_cap_cr"])
         .sort(["index_type", "index_name", "1W"], descending=[False, False, True])
+        .with_columns(pl.col("market_cap_cr").fill_null(100))
     )
 
     _nse_indices_df = nse_indices_df.lazy().select("index_name", "index_type").unique()

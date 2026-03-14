@@ -9,5 +9,4 @@ class EditConfig:
 
 
 class ComputeConfig(EditConfig):
-
     DATA_PATH = StorageConfig().store_root(EditConfig.FOLDER_NAME)

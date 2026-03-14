@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 setup_logger()
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Run Market Dashboard Computation")
     parser.add_argument("--end_date", required=True, help="End date YYYY-MM-DD")
     args = parser.parse_args()
