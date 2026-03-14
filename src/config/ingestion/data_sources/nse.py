@@ -52,13 +52,13 @@ class NSEConfig(EditConfig):
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NSE INDEX NIFTY CHEMICALS",
+            name="NIFTY CHEMICALS",
             url="https://niftyindices.com/indices/equity/sectoral-indices/nifty-chemicals",
             filename="nse_index_nifty_chemical.csv",
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NIFTY FINANCIAL SERVICES",
+            name="NIFTY FINSEREXBNK",
             url="https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-financial-services",
             filename="nse_index_nifty_financial_services.csv",
             source=DownloadSoure.NSE_INDICES,
@@ -148,7 +148,7 @@ class NSEConfig(EditConfig):
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NIFTY MIDSMALL FINANCIAL SERVICES",
+            name="NIFTY MS FIN SERV",
             url="https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-midsmall-financial-services",
             filename="nse_index_nifty_mid_small_financial_services.csv",
             source=DownloadSoure.NSE_INDICES,
@@ -160,7 +160,7 @@ class NSEConfig(EditConfig):
             source=DownloadSoure.NSE_INDICES,
         ),
         IndexConfig(
-            name="NIFTY MIDSMALL IT & TELECOM",
+            name="NIFTY MS IT TELCM",
             url="https://www.niftyindices.com/indices/equity/sectoral-indices/nifty-midsmall-it-telecom",
             filename="nse_index_nifty_mid_small_it_telecom.csv",
             source=DownloadSoure.NSE_INDICES,
