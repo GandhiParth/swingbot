@@ -7,6 +7,8 @@ class EditConfig:
     DATA_PATH = StorageConfig().tmp_root("kite")
     DB_PATH = DATA_PATH / "data.db"
     DB_CONN = f"sqlite:///{DB_PATH}"
+    HIST_DATA_START_LOOKBACK = 3
+    HIST_DATA_MONTHS_LOOKBACK = 9
 
 
 class KiteConfig(EditConfig):

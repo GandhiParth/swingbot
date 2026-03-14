@@ -1,5 +1,6 @@
 import configparser
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -40,3 +41,8 @@ def read_ini_file(file_location: str) -> Optional[configparser.ConfigParser]:
     config.read(file_location)
 
     return config
+
+
+def to_datetime_str(date_str: str) -> str:
+    dt = datetime.strptime(date_str, "%Y-%m-%d")
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
