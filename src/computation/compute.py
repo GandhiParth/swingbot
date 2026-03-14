@@ -3,6 +3,8 @@ from datetime import datetime
 import polars as pl
 
 from config.computation.indicator import IndicatorConfig
+from config.computation.compute import ComputeConfig
+from computation.scanner import prep_scan_data
 
 
 def gen_market_dashboard_data(
@@ -110,3 +112,52 @@ def gen_market_dashboard_data(
         .sort(["index_type", "index_name", "1W"], descending=[False, False, True])
     )
     return indices_stock_data, indices_data
+
+
+def gen_market_breadth_data(stocks_df: pl.DataFrame):
+
+    scan_data = prep_scan_data(stocks_df)
+
+    res = (
+        scan_data.group_by(
+            "timestamp",
+        )
+        .agg(
+            [pl.col("symbol").count().alias("# Stocks")]
+            + [
+                (pl.col("close") >= pl.col(f"close_ema_{i}"))
+                .sum()
+                .alias(f"above_ema_{i}")
+                for i in IndicatorConfig.EMA_DAYS
+            ]
+            + [
+                (pl.col("close") >= pl.col(f"close_sma_{i}"))
+                .sum()
+                .alias(f"above_sma_{i}")
+                for i in IndicatorConfig.SMA_DAYS
+            ]
+            + [
+                (pl.col("pct_gain_prev_1") >= 4.5).sum().alias("UP 4.5% 1D"),
+                (pl.col("pct_gain_prev_1") < 4.5).sum().alias("DOWN 4.5% 1D"),
+            ]
+        )
+        .with_columns(
+            (pl.col(col) * 100 / pl.col("# Stocks"))
+            .round(2)
+            .alias(f"% {col.replace("_", " ").upper()}")
+            for col in ["UP 4.5% 1D", "DOWN 4.5% 1D"]
+            + [f"above_ema_{i}" for i in IndicatorConfig.EMA_DAYS]
+            + [f"above_sma_{i}" for i in IndicatorConfig.SMA_DAYS]
+        )
+        .select(
+            pl.exclude(
+                ["UP 4.5% 1D", "DOWN 4.5% 1D"]
+                + [f"above_ema_{i}" for i in IndicatorConfig.EMA_DAYS]
+                + [f"above_sma_{i}" for i in IndicatorConfig.SMA_DAYS]
+            )
+        )
+        .sort("timestamp", descending=True)
+        .head(ComputeConfig.MKT_BREADTH_DAYS)
+    )
+
+    return res

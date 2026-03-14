@@ -4,7 +4,7 @@ from datetime import datetime
 
 import polars as pl
 
-from computation.compute import gen_market_dashboard_data
+from computation.compute import gen_market_dashboard_data, gen_market_breadth_data
 from config.base import StorageConfig
 from config.computation.compute import ComputeConfig
 from config.ingestion.brokers import KiteConfig
@@ -20,6 +20,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Market Dashboard Computation")
     parser.add_argument("--end_date", required=True, help="End date YYYY-MM-DD")
     args = parser.parse_args()
+
+    save_path = StorageConfig().store_root(ComputeConfig.FOLDER_NAME, args.end_date)
 
     # get indices constituents
     nse_indices_df = fetch_nse_indices(download_flag=False)
@@ -75,7 +77,10 @@ if __name__ == "__main__":
         scan_date=datetime.strptime(args.end_date, "%Y-%m-%d"),
     )
 
-    save_path = StorageConfig().store_root(ComputeConfig.FOLDER_NAME, args.end_date)
+    mkt_db_stocks_df.sink_csv(save_path / ComputeConfig.MKT_DB_STOCKS_PATH)
+    mkt_db_indices_df.sink_csv(save_path / ComputeConfig.MKT_DB_INDICES_PATH)
 
-    mkt_db_stocks_df.collect().write_csv(save_path / ComputeConfig.MKT_DB_STOCKS_PATH)
-    mkt_db_indices_df.collect().write_csv(save_path / ComputeConfig.MKT_DB_INDICES_PATH)
+    # Get Market Breadth Data
+
+    mkt_breadth_df = gen_market_breadth_data(stocks_df=stocks_df)
+    mkt_breadth_df.sink_csv(save_path / ComputeConfig.MKR_BREADTH_PATH)
