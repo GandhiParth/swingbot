@@ -2,6 +2,8 @@ import plotly.express as px
 import polars as pl
 import streamlit as st
 
+from utils import color_returns
+
 
 # ------------------------------------------------
 # SESSION STATE
@@ -62,7 +64,15 @@ def render_index_table(indices_df: pl.DataFrame):
         .collect()
     )
 
-    st.dataframe(display_df, use_container_width=True, hide_index=True)
+    return_cols = ["1D", "1W", "1M", "3M", "6M"]
+
+    styled_df = (
+        display_df.to_pandas()
+        .style.map(color_returns, subset=return_cols)
+        .format({c: "{:.2f}" for c in return_cols})
+    )
+
+    st.dataframe(styled_df, use_container_width=True, hide_index=True)
 
 
 def render_constituents_table(stocks_df: pl.DataFrame):
@@ -108,8 +118,15 @@ def render_constituents_table(stocks_df: pl.DataFrame):
         .collect()
     )
 
+    return_cols = ["1D", "1W", "1M", "3M", "6M"]
+
+    display_df = constituents.to_pandas()
+    styled_df = display_df.style.map(color_returns, subset=return_cols).format(
+        {c: "{:.2f}" for c in return_cols}
+    )
+
     if not constituents.is_empty():
-        st.dataframe(constituents, use_container_width=True, hide_index=True)
+        st.dataframe(styled_df, use_container_width=True, hide_index=True)
     else:
         st.info("No constituents available.")
 

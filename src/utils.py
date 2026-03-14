@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,3 +47,12 @@ def read_ini_file(file_location: str) -> Optional[configparser.ConfigParser]:
 def to_datetime_str(date_str: str) -> str:
     dt = datetime.strptime(date_str, "%Y-%m-%d")
     return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def color_returns(val):
+    if val > 0:
+        return "color: green"
+    elif val < 0:
+        return "color: red"
+    else:
+        return "color: gray"
