@@ -1,8 +1,10 @@
 import argparse
 import logging
+import shutil
 from datetime import datetime, timedelta
 
 from config.ingestion.brokers import KiteConfig
+from config.ingestion.data_sources import NSEConfig
 from ingestion import fetch_nse_indices, fetch_nse_indices_data, fetch_nse_stocks_data
 from ingestion.brokers.kite import KiteLogin, fetch_instruments
 from utils import setup_logger, to_datetime_str
@@ -33,11 +35,16 @@ def _get_start_lookback_date(end_date: str) -> tuple[str, str]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Ingestion Pipeline")
-    parser.add_argument("--fetch", action="store_true", help="Fetch NSE Indices")
     parser.add_argument("--end_date", required=True, help="End date YYYY-MM-DD")
     args = parser.parse_args()
 
-    nse_indices_df = fetch_nse_indices(download_flag=args.fetch)
+    if KiteConfig.DATA_PATH.exists():
+        shutil.rmtree(KiteConfig.DATA_PATH)
+
+    if NSEConfig.TMP_DATA_PATH.exists():
+        shutil.rmtree(NSEConfig.TMP_DATA_PATH)
+
+    nse_indices_df = fetch_nse_indices()
 
     kite = KiteLogin(credentials_path=KiteConfig.CREDENTIALS_PATH)()
     nse_kite_df = fetch_instruments(kite=kite, exchange="NSE").select(
