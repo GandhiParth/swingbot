@@ -1,10 +1,14 @@
 import argparse
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import polars as pl
 
-from computation.compute import gen_market_breadth_data, gen_market_dashboard_data
+from computation.compute import (
+    gen_market_breadth_data,
+    gen_market_dashboard_data,
+    gen_scanner_data,
+)
 from config.base import StorageConfig
 from config.computation.compute import ComputeConfig
 from config.ingestion.brokers import KiteConfig
@@ -16,10 +20,25 @@ logger = logging.getLogger(__name__)
 
 setup_logger()
 
+
+def _write_scan_dict(res, save_path):
+    res["basic_scan_df"].write_csv(save_path / ComputeConfig.BASIC_SCAN_PATH)
+    res["basic_filter_df"].write_csv(save_path / ComputeConfig.BASIC_FILTER_PATH)
+    res["adr_filter_df"].write_csv(save_path / ComputeConfig.ADR_FILTER_PATH)
+    res["pullback_filter_df"].write_parquet(
+        save_path / ComputeConfig.PULLBACK_FILTER_PARQ_PATH
+    )
+    res["final_res"].write_csv(save_path / ComputeConfig.FILTER_RESULT_PATH)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Market Dashboard Computation")
     parser.add_argument("--end_date", required=True, help="End date YYYY-MM-DD")
+    parser.add_argument("--adr_cutoff", default=3, help="ADR Cutoff for Filter")
     args = parser.parse_args()
+
+    end_date = datetime.strptime(args.end_date, "%Y-%m-%d")
+    start_date = end_date - timedelta(days=KiteConfig.HIST_DATA_START_LOOKBACK * 30)
 
     save_path = StorageConfig().store_root(ComputeConfig.FOLDER_NAME, args.end_date)
 
@@ -74,7 +93,7 @@ if __name__ == "__main__":
         indices_df=indices_df,
         stocks_df=stocks_df,
         nse_ind_df=nse_ind_df,
-        scan_date=datetime.strptime(args.end_date, "%Y-%m-%d"),
+        scan_date=end_date,
     )
 
     mkt_db_stocks_df.sink_csv(save_path / ComputeConfig.MKT_DB_STOCKS_PATH)
@@ -84,3 +103,13 @@ if __name__ == "__main__":
 
     mkt_breadth_df = gen_market_breadth_data(stocks_df=stocks_df)
     mkt_breadth_df.sink_csv(save_path / ComputeConfig.MKT_BREADTH_PATH)
+
+    ## Get Scanners & Filters
+    scanner_df_dict = gen_scanner_data(
+        stocks_df=stocks_df,
+        nse_ind_df=nse_ind_df,
+        start_date=start_date,
+        end_date=end_date,
+        adr_cutoff=float(args.adr_cutoff),
+    )
+    _write_scan_dict(res=scanner_df_dict, save_path=save_path)

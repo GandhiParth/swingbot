@@ -111,7 +111,6 @@ def find_stocks(
         .select(pl.col("symbol").unique())
         .with_columns(pl.lit((end_date)).alias("scan_date"))
         .select("scan_date", "symbol")
-        .collect()
     )
 
     return res

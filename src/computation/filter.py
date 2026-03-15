@@ -4,7 +4,6 @@ from datetime import datetime
 import polars as pl
 import polars.selectors as cs
 
-from config.base import StorageConfig
 from config.computation.filter import PullBackFilterConfig
 
 logger = logging.getLogger(__name__)
@@ -14,7 +13,7 @@ def basic_filter(
     data: pl.LazyFrame | pl.DataFrame,
     symbol_list: list[str],
     scan_date: datetime,
-) -> list[str]:
+) -> pl.DataFrame:
 
     logger.info("Applying Basic Filter")
     logger.info(f"Number of stocks in symbol list: {len(symbol_list)}")
@@ -32,14 +31,6 @@ def basic_filter(
         .collect()
     )
 
-    res.write_csv(
-        StorageConfig.store_root(
-            "scanner", f"{scan_date.strftime('%Y-%m-%d')}", "basic_filter.csv"
-        )
-    )
-
-    res = res.select("symbol").unique().get_column("symbol").to_list()
-
     logger.info(f"Symbols after basic filter: {len(res)}")
     return res
 
@@ -49,7 +40,7 @@ def adr_filter(
     symbol_list: list[str],
     scan_date: datetime,
     adr_cutoff: float,
-):
+) -> pl.DataFrame:
 
     logger.info("Applying ADR Filter")
     logger.info(f"Number of stocks in symbol list: {len(symbol_list)}")
@@ -61,11 +52,7 @@ def adr_filter(
             & (pl.col("adr_pct_20") >= adr_cutoff)
             & (pl.col("symbol").is_in(symbol_list))
         )
-        .select("symbol")
-        .unique()
         .collect()
-        .get_column("symbol")
-        .to_list()
     )
 
     logger.info(f"Symbols after basic filter: {len(res)}")
@@ -101,6 +88,7 @@ def pullback_filter(
 
     res = (
         data.lazy()
+        .filter(pl.col("symbol").is_in(symbol_list))
         .with_columns(
             [pl.mean_horizontal(("open", "close")).round(2).alias("mid_prev_0")]
         )
@@ -160,12 +148,8 @@ def pullback_filter(
         )
         .filter((pl.col("timestamp") == scan_date))
         .select(~cs.starts_with("mid_prev"))
-        .select("symbol")
-        .unique()
         .collect()
-        .get_column("symbol")
-        .to_list()
     )
 
-    logger.info(f"Symbols after basic filter: {len(res)}")
+    logger.info(f"Symbols after ADR filter: {len(res.select('symbol').unique())}")
     return res
