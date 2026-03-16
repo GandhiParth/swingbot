@@ -216,6 +216,12 @@ class NSEConfig(EditConfig):
             filename="nse_index_nifty_smallcap_250.csv",
             source=DownloadSoure.NSE,
         ),
+        IndexConfig(
+            name="NIFTY MIDSML 400",
+            url="https://www.niftyindices.com/indices/equity/broad-based-indices/nifty-midsmallcap-400",
+            filename="nse_index_nifty_midsmallcap_400.csv",
+            source=DownloadSoure.NSE_INDICES,
+        ),
     ]
 
     @staticmethod
