@@ -88,8 +88,8 @@ def fetch_nse_indices_data(
     indices_lst = nse_indices_df.get_column("index_name").unique().to_list()
 
     kite_indices = (
-        instruments_df.filter(pl.col("name").is_in(indices_lst))
-        .get_column("name")
+        instruments_df.filter(pl.col("symbol").is_in(indices_lst))
+        .get_column("symbol")
         .to_list()
     )
 
@@ -97,7 +97,7 @@ def fetch_nse_indices_data(
         f"Following Indices not Mapped with Kite Instruments: {list(set(indices_lst) - set(kite_indices))}"
     )
 
-    index_fetch_df = instruments_df.filter(pl.col("name").is_in(indices_lst)).select(
+    index_fetch_df = instruments_df.filter(pl.col("symbol").is_in(indices_lst)).select(
         "symbol", "instrument_token"
     )
 
