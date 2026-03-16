@@ -3,9 +3,12 @@ from config.base import StorageConfig
 
 class EditConfig:
     FOLDER_NAME = "compute"
+    MIDSML_400_INDEX = "NIFTY MIDSML 400"
+    SMLCAP_250_INDEX = "NIFTY SMLCAP 250"
 
 
 class ComputeConfig(EditConfig):
+    RS_INDEX = EditConfig.MIDSML_400_INDEX
     DATA_PATH = StorageConfig().store_root(EditConfig.FOLDER_NAME)
 
     MKT_DB_STOCKS_PATH = "market_dashboard_stocks_data.csv"
