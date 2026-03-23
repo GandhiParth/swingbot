@@ -5,6 +5,7 @@ class EditConfig:
     FOLDER_NAME = "compute"
     MIDSML_400_INDEX = "NIFTY MIDSML 400"
     SMLCAP_250_INDEX = "NIFTY SMLCAP 250"
+    ATR_DAYS = 20
 
 
 class ComputeConfig(EditConfig):
@@ -22,3 +23,4 @@ class ComputeConfig(EditConfig):
     ADR_FILTER_PATH = "adr_filter_data.csv"
     PULLBACK_FILTER_PARQ_PATH = "pullback_filter_data.parquet"
     FILTER_RESULT_PATH = "overall_filter_result_data.csv"
+    STOCKS_RS_PATH = "stocks_relatove_strength.csv"

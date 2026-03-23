@@ -1,0 +1,7 @@
+- Get Industry Classification
+- Develop Short Scanner
+- Add Long Scanner to App
+- Add Short Scanner to App
+- Long Scanner Indsutry Analysis
+- Short Scanner Industry Analysis 
+- RRG Graphs

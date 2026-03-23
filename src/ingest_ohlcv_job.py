@@ -1,6 +1,5 @@
 import argparse
 import logging
-import shutil
 from datetime import datetime, timedelta
 
 from config.ingestion.brokers import KiteConfig

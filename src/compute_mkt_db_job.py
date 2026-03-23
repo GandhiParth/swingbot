@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import polars as pl
 
 from computation.compute import (
+    cal_stocks_rs,
     gen_market_breadth_data,
     gen_market_dashboard_data,
     gen_scanner_data,
@@ -113,3 +114,11 @@ if __name__ == "__main__":
         adr_cutoff=float(args.adr_cutoff),
     )
     _write_scan_dict(res=scanner_df_dict, save_path=save_path)
+
+    ## Calculate Stocks RS
+    stocks_rs_df = cal_stocks_rs(
+        indices_df=indices_df.lazy().filter(pl.col("symbol") == ComputeConfig.RS_INDEX),
+        stocks_df=stocks_df,
+        end_date=end_date,
+    )
+    stocks_rs_df.sink_csv(save_path / ComputeConfig.STOCKS_RS_PATH)

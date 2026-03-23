@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import polars as pl
+import polars.selectors as cs
 
 from computation.filter import adr_filter, basic_filter, pullback_filter
 from computation.scanner import basic_scan, find_stocks, prep_scan_data
@@ -240,3 +241,119 @@ def gen_scanner_data(
     )
     res_dict["final_res"] = final_res
     return res_dict
+
+
+def cal_atr(data: pl.DataFrame | pl.LazyFrame, lag: int = ComputeConfig.ATR_DAYS):
+
+    res = (
+        data.lazy()
+        .with_columns(pl.col("timestamp").cast(pl.Date()))
+        .with_columns(
+            pl.col("close")
+            .shift(1)
+            .over(partition_by="symbol", order_by="timestamp", descending=False)
+            .alias("close_prev_1")
+        )
+        .with_columns(
+            pl.max_horizontal(
+                pl.col("high") - pl.col("low"),
+                (pl.col("high") - pl.col("close_prev_1")).abs(),
+                (pl.col("low") - pl.col("close_prev_1")).abs(),
+            ).alias("true_range")
+        )
+        .with_columns(
+            pl.col("true_range")
+            .ewm_mean(alpha=2 / (n + 1))
+            .over(partition_by="symbol", order_by="timestamp", descending=False)
+            .round(2)
+            .alias(f"atr_{n}")
+            for n in [lag]
+        )
+        .select("symbol", "timestamp", "close", f"atr_{lag}")
+    )
+
+    return res
+
+
+def cal_stocks_rs(
+    indices_df: pl.DataFrame | pl.LazyFrame,
+    stocks_df: pl.DataFrame | pl.LazyFrame,
+    end_date: datetime,
+) -> pl.LazyFrame:
+
+    index_atr = (
+        cal_atr(data=indices_df)
+        .rename(
+            {f"atr_{ComputeConfig.ATR_DAYS}": f"index_atr_{ComputeConfig.ATR_DAYS}"}
+        )
+        .with_columns(
+            pl.col("close")
+            .shift(1)
+            .over(partition_by="symbol", order_by="timestamp", descending=False)
+            .alias("close_prev_1")
+        )
+        .with_columns((pl.col("close") - pl.col("close_prev_1")).alias("price_change"))
+        .with_columns(
+            (
+                pl.col("price_change") / pl.col(f"index_atr_{ComputeConfig.ATR_DAYS}")
+            ).alias("spi")
+        )
+        .select("timestamp", "spi")
+    )
+    stocks_atr = (
+        cal_atr(data=stocks_df)
+        .rename(
+            {f"atr_{ComputeConfig.ATR_DAYS}": f"stock_atr_{ComputeConfig.ATR_DAYS}"}
+        )
+        .drop("close")
+    )
+
+    res = (
+        stocks_df.lazy()
+        .with_columns(pl.col("timestamp").cast(pl.Date()))
+        .with_columns(
+            pl.col("close")
+            .shift(1)
+            .over(partition_by="symbol", order_by="timestamp", descending=False)
+            .alias("close_prev_1")
+        )
+        .with_columns((pl.col("close") - pl.col("close_prev_1")).alias("price_change"))
+        .join(stocks_atr, on=["symbol", "timestamp"])
+        .join(index_atr, on="timestamp", how="left")
+        .with_columns(
+            (pl.col("spi") * pl.col(f"stock_atr_{ComputeConfig.ATR_DAYS}")).alias(
+                "expected_change"
+            )
+        )
+        .with_columns(
+            (pl.col("price_change") - pl.col("expected_change")).alias("excess_move")
+        )
+        .with_columns(
+            (
+                pl.col("excess_move") / pl.col(f"stock_atr_{ComputeConfig.ATR_DAYS}")
+            ).alias(f"rss_{ComputeConfig.ATR_DAYS}")
+        )
+        .with_columns(
+            pl.col(f"rss_{ComputeConfig.ATR_DAYS}")
+            .rolling_mean(ComputeConfig.ATR_DAYS)
+            .over(partition_by="symbol", order_by="timestamp", descending=False)
+            .alias("rolling RSS")
+        )
+        .select("symbol", "timestamp", f"rss_{ComputeConfig.ATR_DAYS}", "rolling RSS")
+        .with_columns(
+            pl.col("rolling RSS")
+            .rank(method="dense")
+            .over("timestamp", descending=False)
+            .alias("rank")
+        )
+        .with_columns(
+            ((pl.col("rank") - 1) / (pl.len().over("timestamp") - 1) * 100).alias(
+                "rss_score"
+            )
+        )
+        .filter((pl.col("timestamp") == end_date) & pl.col("rss_score").is_not_null())
+        .sort("rss_score", descending=True)
+        .with_columns(cs.float().round(4))
+    )
+
+    return res
