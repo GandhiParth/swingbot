@@ -30,8 +30,11 @@ class IndexConfig:
 
 
 class NSEConfig(EditConfig):
-    NSE_URL = "https://www.nseindia.com"
+    # NSE_URL = "https://www.nseindia.com"
+    NSE_URL = "https://www.nseindia.com/get-quote/equity/SHAILY/Shaily-Engineering-Plastics-Limited"
+
     INDICES_DOWNLOAD_RATE_LIMIT = RateLimitConfig(calls=1, period=10)
+
     SECTOR_INDICES = [
         IndexConfig(
             name="NIFTY AUTO",
