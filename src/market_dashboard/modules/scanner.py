@@ -14,7 +14,9 @@ def init_state_long(long_scanner_df: pl.DataFrame):
         st.session_state.selected_min_adr = 3.5
 
     if "selected_min_rss_score" not in st.session_state:
-        st.session_state.selected_min_adr = 70
+        st.session_state.selected_min_rss_score = long_scanner_df.get_column(
+            "RSS SCORE"
+        ).min()
 
 
 def render_filters_long(long_scanner_df: pl.DataFrame):
@@ -23,10 +25,9 @@ def render_filters_long(long_scanner_df: pl.DataFrame):
         "SECTOR",
         long_scanner_df.get_column("SECTOR").unique().to_list(),
         key="selected_sectors_long",
-        label_visibility="collapsed",
     )
 
-    cols1, cols2, cols3, cols4 = st.columns(3)
+    cols1, cols2, cols3, cols4 = st.columns(4)
 
     with cols1:
         st.slider(
@@ -50,7 +51,6 @@ def render_filters_long(long_scanner_df: pl.DataFrame):
             options=[True, False],
             default=[True, False],  # both selected initially
             key="selected_adr_filter_flag",
-            label_visibility="collapsed",
         )
     with cols4:
         st.multiselect(
@@ -58,7 +58,6 @@ def render_filters_long(long_scanner_df: pl.DataFrame):
             options=[True, False],
             default=[True, False],  # both selected initially
             key="selected_pullback_filter_flag",
-            label_visibility="collapsed",
         )
 
 
@@ -66,11 +65,14 @@ def render_long_scanner(data: pl.DataFrame):
     init_state_long(long_scanner_df=data)
     render_filters_long(long_scanner_df=data)
 
+    inital_count = data.height
+
     res = (
         data.lazy()
         .filter(
             (pl.col("SECTOR").is_in(st.session_state.selected_sectors_long))
             & (pl.col("ADR PCT 20") >= st.session_state.selected_min_adr)
+            & (pl.col("RSS SCORE") >= st.session_state.selected_min_rss_score)
             & (
                 pl.col("ADR FILTER FLAG").is_in(
                     st.session_state.selected_adr_filter_flag
@@ -84,6 +86,10 @@ def render_long_scanner(data: pl.DataFrame):
         )
         .collect()
     )
+
+    final_count = res.height
+
+    st.metric("Count", f"{final_count}/{inital_count}")
 
     round_cols = res.select(cs.float()).columns
     int_cols = res.select(cs.integer()).columns
