@@ -1,5 +1,0 @@
-- Develop Short Scanner
-- Add Short Scanner to App
-- Long Scanner Indsutry Analysis
-- Short Scanner Industry Analysis 
-- RRG Graphs

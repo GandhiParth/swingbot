@@ -84,6 +84,7 @@ def render_long_scanner(data: pl.DataFrame):
                 )
             )
         )
+        .sort(["SECTOR", "SYMBOL"], descending=[False, False])
         .collect()
     )
 
@@ -98,7 +99,114 @@ def render_long_scanner(data: pl.DataFrame):
     fmt.update({c: "{:.0f}" for c in int_cols})
     display_df = display_df.style.format(fmt)
 
-    st.dataframe(display_df, width="stretch", hide_index=True)
+    st.dataframe(display_df, width="content", hide_index=True, height="content")
+
+
+def render_long_analysis(data: pl.DataFrame):
+    sec_ind_df = (
+        data.lazy()
+        .select(
+            [
+                "ADR PCT 20",
+                "1D",
+                "1W",
+                "1M",
+                "3M",
+                "6M",
+                "SECTOR",
+                "INDUSTRY",
+                "MARKET CAP CR",
+            ]
+        )
+        .filter(pl.col("ADR PCT 20") >= 3.5)
+        .group_by("SECTOR", "INDUSTRY")
+        .agg(
+            [pl.len()]
+            + [
+                (
+                    (pl.col(col) * pl.col("MARKET CAP CR")).sum()
+                    / pl.col("MARKET CAP CR").sum()
+                )
+                .round(2)
+                .alias(f"{col} WR")
+                for col in [
+                    "1D",
+                    "1W",
+                    "1M",
+                    "3M",
+                    "6M",
+                ]
+            ]
+        )
+        .sort("len", descending=True)
+        .rename({"len": "COUNT"})
+        .collect()
+    )
+
+    sec_df = (
+        data.lazy()
+        .select(
+            [
+                "ADR PCT 20",
+                "1D",
+                "1W",
+                "1M",
+                "3M",
+                "6M",
+                "SECTOR",
+                "MARKET CAP CR",
+            ]
+        )
+        .filter(pl.col("ADR PCT 20") >= 3.5)
+        .group_by("SECTOR")
+        .agg(
+            [pl.len()]
+            + [
+                (
+                    (pl.col(col) * pl.col("MARKET CAP CR")).sum()
+                    / pl.col("MARKET CAP CR").sum()
+                )
+                .round(2)
+                .alias(f"{col} WR")
+                for col in [
+                    "1D",
+                    "1W",
+                    "1M",
+                    "3M",
+                    "6M",
+                ]
+            ]
+        )
+        .sort("len", descending=True)
+        .rename({"len": "COUNT"})
+        .collect()
+    )
+
+    cols1, cols2 = st.columns(2)
+
+    with cols1:
+        round_cols = sec_ind_df.select(cs.float()).columns
+        int_cols = sec_ind_df.select(cs.integer()).columns
+        display_df = sec_ind_df.to_pandas()
+
+        display_df = sec_ind_df.to_pandas()
+        fmt = {c: "{:.2f}" for c in round_cols}
+        fmt.update({c: "{:.0f}" for c in int_cols})
+        display_df = display_df.style.format(fmt)
+
+        st.dataframe(display_df, width="content", hide_index=True, height="content")
+
+    with cols2:
+        round_cols = sec_df.select(cs.float()).columns
+        int_cols = sec_df.select(cs.integer()).columns
+        display_df = sec_df.to_pandas()
+
+        display_df = sec_df.to_pandas()
+        fmt = {c: "{:.2f}" for c in round_cols}
+        fmt.update({c: "{:.0f}" for c in int_cols})
+        display_df = display_df.style.format(fmt)
+
+        st.dataframe(display_df, width="content", hide_index=True, height="content")
 
 
 def render(long_scanner_df: pl.DataFrame):
@@ -109,4 +217,4 @@ def render(long_scanner_df: pl.DataFrame):
         render_long_scanner(data=long_scanner_df)
 
     with tabs[1]:
-        st.markdown("Under Development")
+        render_long_analysis(data=long_scanner_df)

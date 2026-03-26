@@ -27,7 +27,7 @@ def basic_filter(
                 (pl.col("close_ema_9") >= pl.col("close_sma_50"))
                 | (pl.col("close_ema_21") >= pl.col("close_sma_50"))
             )
-            & ((pl.col("close_sma_50") >= pl.col("close_sma_200")))
+            & (pl.col("close_sma_50") >= pl.col("close_sma_200"))
         )
         .collect()
     )
