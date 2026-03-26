@@ -51,6 +51,9 @@ def load_scanner_data(date: str):
 
     path = ComputeConfig.DATA_PATH / date
 
+    rss_df = pl.scan_csv(path / ComputeConfig.STOCKS_RS_PATH).select(
+        "symbol", "rss_score"
+    )
     scanner_df = (
         pl.scan_csv(path / ComputeConfig.FILTER_RESULT_PATH)
         .select(
@@ -82,6 +85,7 @@ def load_scanner_data(date: str):
                 for i, value in IndicatorConfig.LOOKBACK_RETURN_PCT.items()
             }
         )
+        .join(rss_df, on="symbol", how="left")
         .collect()
     )
 
