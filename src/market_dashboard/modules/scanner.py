@@ -103,7 +103,10 @@ def render_long_scanner(data: pl.DataFrame):
 
 def render(long_scanner_df: pl.DataFrame):
 
-    tabs = st.tabs(["Long"])
+    tabs = st.tabs(["Long", "Long Sector Analysis"])
 
     with tabs[0]:
         render_long_scanner(data=long_scanner_df)
+
+    with tabs[1]:
+        st.markdown("Under Development")
