@@ -55,7 +55,7 @@ def adr_filter(
         .collect()
     )
 
-    logger.info(f"Symbols after basic filter: {len(res)}")
+    logger.info(f"Symbols after ADR filter: {len(res)}")
     return res
 
 
@@ -151,5 +151,5 @@ def pullback_filter(
         .collect()
     )
 
-    logger.info(f"Symbols after ADR filter: {len(res.select('symbol').unique())}")
+    logger.info(f"Symbols after PullBack filter: {len(res.select('symbol').unique())}")
     return res
