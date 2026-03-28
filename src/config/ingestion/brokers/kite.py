@@ -36,6 +36,8 @@ class KiteConfig(EditConfig):
     TYP_INDICES = "indices"
     TYP_STOCKS = "stocks"
 
+    FNO_STOCKS_PATH = "fno_stocks.csv"
+
     @staticmethod
     def get_db_tbl(data_type: str, frequency: str, failed_tbl: bool):
         prefix = "failed_" if failed_tbl else ""

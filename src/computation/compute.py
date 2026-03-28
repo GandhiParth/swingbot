@@ -3,10 +3,21 @@ from datetime import datetime
 import polars as pl
 import polars.selectors as cs
 
-from computation.filter import adr_filter, basic_filter, pullback_filter
-from computation.scanner import basic_scan, find_stocks, prep_scan_data
+from computation.filter import (
+    adr_filter,
+    basic_filter,
+    basic_short_filter,
+    pullback_filter,
+)
+from computation.scanner import (
+    basic_scan,
+    basic_short_scan,
+    find_stocks,
+    prep_scan_data,
+)
 from config.computation.compute import ComputeConfig
 from config.computation.indicator import IndicatorConfig
+from config.ingestion.brokers import KiteConfig
 
 
 def gen_market_dashboard_data(
@@ -357,3 +368,71 @@ def cal_stocks_rs(
     )
 
     return res
+
+
+def gen_short_scanner_data(
+    stocks_df: pl.DataFrame,
+    nse_ind_df: pl.DataFrame,
+    start_date: datetime,
+    end_date: datetime,
+    adr_cutoff: float,
+) -> dict[str : pl.DataFrame]:
+    res_dict = {}
+
+    # Preparing Scan Data
+
+    scan_df = prep_scan_data(data=stocks_df)
+    basic_scan_df = basic_short_scan(data=scan_df)
+    res_dict["basic_scan_df"] = basic_scan_df.collect()
+
+    find_stocks_scan_df = find_stocks(
+        data=basic_scan_df, start_date=start_date, end_date=end_date
+    ).collect()
+    scan_stocks_list = find_stocks_scan_df.get_column("symbol").to_list()
+
+    # Preparing Filter Data
+    basic_filter_df = basic_short_filter(
+        data=scan_df, symbol_list=scan_stocks_list, scan_date=end_date
+    )
+    res_dict["basic_filter_df"] = basic_filter_df
+    basic_filter_stocks = basic_filter_df.get_column("symbol").to_list()
+
+    adr_filter_df = adr_filter(
+        data=scan_df,
+        symbol_list=basic_filter_stocks,
+        scan_date=end_date,
+        adr_cutoff=adr_cutoff,
+    )
+    res_dict["adr_filter_df"] = adr_filter_df
+    adr_filter_stocks = adr_filter_df.get_column("symbol").to_list()
+
+    # FNO STOCKS
+    fno_stocks_list = (
+        pl.read_csv(KiteConfig.DATA_PATH / KiteConfig.FNO_STOCKS_PATH)
+        .get_column("symbol")
+        .to_list()
+    )
+
+    # Final Output
+
+    final_res = (
+        scan_df.filter(
+            (pl.col("symbol").is_in(basic_filter_stocks))
+            & (pl.col("timestamp") == end_date)
+        )
+        .with_columns(
+            pl.when(pl.col("symbol").is_in(value))
+            .then(True)
+            .otherwise(False)
+            .alias(key)
+            for key, value in {
+                "basic_filter_flag": basic_filter_stocks,
+                "adr_filter_flag": adr_filter_stocks,
+                "fno_flag": fno_stocks_list,
+            }.items()
+        )
+        .join(nse_ind_df.lazy(), on="symbol", how="left")
+        .collect()
+    )
+    res_dict["final_res"] = final_res
+    return res_dict

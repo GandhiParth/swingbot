@@ -9,6 +9,7 @@ from computation.compute import (
     gen_market_breadth_data,
     gen_market_dashboard_data,
     gen_scanner_data,
+    gen_short_scanner_data,
 )
 from config.base import StorageConfig
 from config.computation.compute import ComputeConfig
@@ -30,6 +31,13 @@ def _write_scan_dict(res, save_path):
         save_path / ComputeConfig.PULLBACK_FILTER_PARQ_PATH
     )
     res["final_res"].write_csv(save_path / ComputeConfig.FILTER_RESULT_PATH)
+
+
+def _write_short_scan_dict(res, save_path):
+    res["basic_scan_df"].write_csv(save_path / ComputeConfig.BASIC_SCAN_PATH)
+    res["basic_filter_df"].write_csv(save_path / ComputeConfig.BASIC_SHORT_FILTER_PATH)
+    res["adr_filter_df"].write_csv(save_path / ComputeConfig.ADR_SHORT_FILTER_PATH)
+    res["final_res"].write_csv(save_path / ComputeConfig.FILTER_SHORT_RESULT_PATH)
 
 
 if __name__ == "__main__":
@@ -114,6 +122,15 @@ if __name__ == "__main__":
         adr_cutoff=float(args.adr_cutoff),
     )
     _write_scan_dict(res=scanner_df_dict, save_path=save_path)
+
+    short_scanner_df_dict = gen_short_scanner_data(
+        stocks_df=stocks_df,
+        nse_ind_df=nse_ind_df,
+        start_date=start_date,
+        end_date=end_date,
+        adr_cutoff=float(args.adr_cutoff),
+    )
+    _write_short_scan_dict(res=short_scanner_df_dict, save_path=save_path)
 
     ## Calculate Stocks RS
     stocks_rs_df = cal_stocks_rs(

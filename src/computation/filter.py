@@ -36,6 +36,33 @@ def basic_filter(
     return res
 
 
+def basic_short_filter(
+    data: pl.LazyFrame | pl.DataFrame,
+    symbol_list: list[str],
+    scan_date: datetime,
+) -> pl.DataFrame:
+
+    logger.info("Applying Basic Filter")
+    logger.info(f"Number of stocks in symbol list: {len(symbol_list)}")
+
+    res = (
+        data.lazy()
+        .filter(
+            (pl.col("timestamp") == scan_date)
+            & (pl.col("symbol").is_in(symbol_list))
+            & (
+                (pl.col("close_ema_9") <= pl.col("close_sma_50"))
+                | (pl.col("close_ema_21") <= pl.col("close_sma_50"))
+            )
+            & (pl.col("close_sma_50") <= pl.col("close_sma_200"))
+        )
+        .collect()
+    )
+
+    logger.info(f"Symbols after Short basic filter: {len(res)}")
+    return res
+
+
 def adr_filter(
     data: pl.LazyFrame | pl.DataFrame,
     symbol_list: list[str],

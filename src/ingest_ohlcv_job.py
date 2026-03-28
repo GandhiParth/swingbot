@@ -2,6 +2,8 @@ import argparse
 import logging
 from datetime import datetime, timedelta
 
+import polars as pl
+
 from config.ingestion.brokers import KiteConfig
 from ingestion import fetch_nse_indices, fetch_nse_indices_data, fetch_nse_stocks_data
 from ingestion.brokers.kite import KiteLogin, fetch_instruments
@@ -66,6 +68,9 @@ if __name__ == "__main__":
         frequency="day",
     )
 
-#     fetch_nse_industry_classification(
-#     ins_df=nse_kite_df.sample(100), fetch_date="2026-03-05"
-# )
+    nse_kite_df = fetch_instruments(kite=kite, exchange="NFO")
+    nse_kite_df.lazy().filter(pl.col("instrument_type") == "FUT").select(
+        "name"
+    ).unique().rename({"name": "symbol"}).sink_csv(
+        KiteConfig.DATA_PATH / KiteConfig.FNO_STOCKS_PATH
+    )

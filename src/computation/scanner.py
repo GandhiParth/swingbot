@@ -71,6 +71,22 @@ def basic_scan(data: pl.LazyFrame) -> pl.LazyFrame:
     return res
 
 
+def basic_short_scan(data: pl.LazyFrame) -> pl.LazyFrame:
+    """
+    Basic Short Scan checking if EMA's and Vol are aligned along with Past Pct Gains
+    """
+    pct_gain_expr = reduce(
+        lambda a, b: a | b,
+        [
+            pl.col(f"pct_gain_prev_{days}") <= -threshold
+            for days, threshold in IndicatorConfig.LOOKBACK_DAYS_TO_MIN_RETURN_PCT.items()
+        ],
+    )
+    res = data.lazy().filter((pl.col("all_data_flag") == True)).filter(pct_gain_expr)
+
+    return res
+
+
 def high_adr_scan(data: pl.LazyFrame, adr_cutoff: float) -> pl.LazyFrame:
     """
     High ADR cutoff on top of Basic Scan
