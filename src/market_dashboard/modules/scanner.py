@@ -209,12 +209,102 @@ def render_long_analysis(data: pl.DataFrame):
         st.dataframe(display_df, width="content", hide_index=True, height="content")
 
 
-def render(long_scanner_df: pl.DataFrame):
+def init_state_short(short_scanner_df: pl.DataFrame):
 
-    tabs = st.tabs(["Long", "Long Sector Analysis"])
+    if "selected_sectors_short" not in st.session_state:
+        st.session_state.selected_sectors_short = (
+            short_scanner_df.get_column("SECTOR").unique().to_list()
+        )
+
+    if "selected_min_adr_short" not in st.session_state:
+        st.session_state.selected_min_adr_short = 3.5
+
+    if "selected_max_rss_score" not in st.session_state:
+        st.session_state.selected_max_rss_score = short_scanner_df.get_column(
+            "RSS SCORE"
+        ).max()
+
+
+def render_filters_short(short_scanner_df: pl.DataFrame):
+
+    st.multiselect(
+        "SECTOR",
+        short_scanner_df.get_column("SECTOR").unique().to_list(),
+        key="selected_sectors_short",
+    )
+
+    cols1, cols2, cols3 = st.columns(3)
+
+    with cols1:
+        st.slider(
+            "ADR",
+            min_value=short_scanner_df.get_column("ADR PCT 20").min(),
+            max_value=short_scanner_df.get_column("ADR PCT 20").max(),
+            key="selected_min_adr_short",
+        )
+
+    with cols2:
+        st.slider(
+            "RSS SCORE",
+            min_value=short_scanner_df.get_column("RSS SCORE").min(),
+            max_value=short_scanner_df.get_column("RSS SCORE").max(),
+            key="selected_max_rss_score",
+        )
+
+    with cols3:
+        st.multiselect(
+            "ADR FILTER",
+            options=[True, False],
+            default=[True, False],  # both selected initially
+            key="selected_adr_filter_flag_short",
+        )
+
+
+def render_short_scanner(data: pl.DataFrame):
+    init_state_short(short_scanner_df=data)
+    render_filters_short(short_scanner_df=data)
+
+    inital_count = data.height
+
+    res = (
+        data.lazy()
+        .filter(
+            (pl.col("SECTOR").is_in(st.session_state.selected_sectors_short))
+            & (pl.col("ADR PCT 20") >= st.session_state.selected_min_adr_short)
+            & (pl.col("RSS SCORE") <= st.session_state.selected_max_rss_score)
+            & (
+                pl.col("ADR FILTER FLAG").is_in(
+                    st.session_state.selected_adr_filter_flag_short
+                )
+            )
+        )
+        .sort(["SECTOR", "SYMBOL"], descending=[False, False])
+        .collect()
+    )
+
+    final_count = res.height
+
+    st.metric("Count", f"{final_count}/{inital_count}")
+
+    round_cols = res.select(cs.float()).columns
+    int_cols = res.select(cs.integer()).columns
+    display_df = res.to_pandas()
+    fmt = {c: "{:.2f}" for c in round_cols}
+    fmt.update({c: "{:.0f}" for c in int_cols})
+    display_df = display_df.style.format(fmt)
+
+    st.dataframe(display_df, width="content", hide_index=True, height="content")
+
+
+def render(long_scanner_df: pl.DataFrame, short_scanner_df: pl.DataFrame):
+
+    tabs = st.tabs(["LONG", "LONG SECTOR ANALYSIS", "SHORT"])
 
     with tabs[0]:
         render_long_scanner(data=long_scanner_df)
 
     with tabs[1]:
         render_long_analysis(data=long_scanner_df)
+
+    with tabs[2]:
+        render_short_scanner(data=short_scanner_df)

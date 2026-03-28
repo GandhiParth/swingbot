@@ -96,4 +96,42 @@ def load_scanner_data(date: str):
         .collect()
     )
 
-    return scanner_df
+    short_scanner_df = (
+        pl.scan_csv(path / ComputeConfig.FILTER_SHORT_RESULT_PATH)
+        .filter(pl.col("fno_flag") == True)
+        .select(
+            [
+                "symbol",
+                "pct_gain_prev_1",
+                "pct_gain_prev_5",
+                "pct_gain_prev_21",
+                "pct_gain_prev_63",
+                "pct_gain_prev_126",
+                "rvol_pct_50",
+                "adr_pct_20",
+                "adr_filter_flag",
+                "macro_economic_sector",
+                "sector",
+                "industry",
+                "basic_industry",
+                "market_cap_cr",
+            ]
+        )
+        .rename(
+            {
+                f"pct_gain_prev_{i}": f"{value}"
+                for i, value in IndicatorConfig.LOOKBACK_RETURN_PCT.items()
+            }
+        )
+        .join(rss_df, on="symbol", how="left")
+        .collect()
+    )
+
+    short_scanner_df = (
+        short_scanner_df.lazy()
+        .rename({i: i.replace("_", " ").upper() for i in short_scanner_df.columns})
+        .with_columns(cs.float().round(2))
+        .collect()
+    )
+
+    return scanner_df, short_scanner_df
