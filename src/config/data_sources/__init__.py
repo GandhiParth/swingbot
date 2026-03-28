@@ -1,3 +1,0 @@
-from .nse import MARKET_INDICES, SECTOR_INDICES
-
-__all__ = ["SECTOR_INDICES", "MARKET_INDICES"]

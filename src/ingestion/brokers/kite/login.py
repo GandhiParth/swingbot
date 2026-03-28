@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
-from brokers.exceptions import KiteError
+from ingestion.brokers.exceptions import KiteError
 from utils import read_ini_file
 
 logger = logging.getLogger(__name__)
