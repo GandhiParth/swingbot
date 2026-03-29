@@ -34,13 +34,13 @@ indices_df, stocks_df = load_mkt_db_data(selected_date)
 mkt_breadth_df = load_mkt_breadth_data(selected_date)
 long_scanner_df, short_scanner_df = load_scanner_data(selected_date)
 
-st.caption(f"Market Data: {selected_date}")
+st.header(f"Market Data: {selected_date}")
 
 # ------------------------------------------------
 # PAGES
 # ------------------------------------------------
 
-tabs = st.tabs(["Market Overview", "Market Breadth", "Scanner"])
+tabs = st.tabs(["MARKET OVERVIEW", "MARKET BREADTH", "SCANNER"])
 
 with tabs[0]:
     render_overview(stocks_df=stocks_df, indices_df=indices_df)

@@ -2,6 +2,8 @@ import polars as pl
 import polars.selectors as cs
 import streamlit as st
 
+from utils import color_returns
+
 
 def init_state_long(long_scanner_df: pl.DataFrame):
 
@@ -90,14 +92,22 @@ def render_long_scanner(data: pl.DataFrame):
 
     final_count = res.height
 
-    st.metric("Count", f"{final_count}/{inital_count}")
+    cols1, cols2 = st.columns([1, 3], gap="small")
+
+    with cols1:
+        st.metric("Count", f"{final_count}/{inital_count}")
+
+    with cols2:
+        symbol_list = res.get_column("SYMBOL").to_list()
+        st.code(", ".join(symbol_list))
 
     round_cols = res.select(cs.float()).columns
+    return_cols = ["1D", "1W", "1M", "3M", "6M"]
     int_cols = res.select(cs.integer()).columns
     display_df = res.to_pandas()
     fmt = {c: "{:.2f}" for c in round_cols}
     fmt.update({c: "{:.0f}" for c in int_cols})
-    display_df = display_df.style.format(fmt)
+    display_df = display_df.style.map(color_returns, subset=return_cols).format(fmt)
 
     st.dataframe(display_df, width="content", hide_index=True, height="content")
 
@@ -284,14 +294,22 @@ def render_short_scanner(data: pl.DataFrame):
 
     final_count = res.height
 
-    st.metric("Count", f"{final_count}/{inital_count}")
+    cols1, cols2 = st.columns([1, 3], gap="small")
+
+    with cols1:
+        st.metric("Count", f"{final_count}/{inital_count}")
+
+    with cols2:
+        symbol_list = res.get_column("SYMBOL").to_list()
+        st.code(", ".join(symbol_list))
 
     round_cols = res.select(cs.float()).columns
     int_cols = res.select(cs.integer()).columns
+    return_cols = ["1D", "1W", "1M", "3M", "6M"]
     display_df = res.to_pandas()
     fmt = {c: "{:.2f}" for c in round_cols}
     fmt.update({c: "{:.0f}" for c in int_cols})
-    display_df = display_df.style.format(fmt)
+    display_df = display_df.style.map(color_returns, subset=return_cols).format(fmt)
 
     st.dataframe(display_df, width="content", hide_index=True, height="content")
 
