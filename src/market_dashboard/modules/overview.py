@@ -147,6 +147,7 @@ def render_heatmap(stocks_df: pl.DataFrame):
 
     indices = (
         stocks_df.filter(pl.col("index_type").is_in(st.session_state.index_types))
+        .sort("index_name")
         .get_column("index_name")
         .unique()
         .to_list()
