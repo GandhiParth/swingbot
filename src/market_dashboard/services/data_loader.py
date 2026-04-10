@@ -68,6 +68,7 @@ def load_scanner_data(date: str):
     rss_df = pl.scan_csv(path / ComputeConfig.STOCKS_RS_PATH).select(
         "symbol", "rss_score"
     )
+
     scanner_df = (
         pl.scan_csv(path / ComputeConfig.FILTER_RESULT_PATH)
         .select(
@@ -93,13 +94,37 @@ def load_scanner_data(date: str):
                 "market_cap_cr",
             ]
         )
+        .join(rss_df, on="symbol", how="left")
+        .select(
+            [
+                "symbol",
+                "pct_gain_prev_1",
+                "pct_gain_prev_5",
+                "pct_gain_prev_21",
+                "pct_gain_prev_63",
+                "pct_gain_prev_126",
+                "rss_score",
+                "rvol_pct_50",
+                "adr_pct_20",
+                "adr_filter_flag",
+                "pullback_filter_flag",
+                "mid_down_streak",
+                "near_ema_9",
+                "near_ema_21",
+                "near_sma_50",
+                "macro_economic_sector",
+                "sector",
+                "industry",
+                "basic_industry",
+                "market_cap_cr",
+            ]
+        )
         .rename(
             {
                 f"pct_gain_prev_{i}": f"{value}"
                 for i, value in IndicatorConfig.LOOKBACK_RETURN_PCT.items()
             }
         )
-        .join(rss_df, on="symbol", how="left")
         .collect()
     )
 
