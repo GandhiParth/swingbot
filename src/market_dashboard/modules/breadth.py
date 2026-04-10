@@ -35,31 +35,37 @@ def render_breadth_chart(breadth_df: pl.DataFrame):
     st.plotly_chart(fig, width="stretch")
 
 
-def render(breadth_df: pl.DataFrame):
+def render(breadth_df: pl.DataFrame, regime_df: pl.DataFrame):
 
-    st.subheader("Market Breadth (Entire Market)")
+    tabs = st.tabs(["BREADTH", "REGIME"])
 
-    breadth_df = breadth_df.sort("timestamp", descending=True)
-    latest_data = breadth_df.head(1)
+    with tabs[0]:
+        st.subheader("Market Breadth (Entire Market)")
 
-    metric_cols = [c for c in latest_data.columns if c != "timestamp"]
+        breadth_df = breadth_df.sort("timestamp", descending=True)
+        latest_data = breadth_df.head(1)
 
-    cols = st.columns(len(metric_cols))
+        metric_cols = [c for c in latest_data.columns if c != "timestamp"]
 
-    for col_container, col_name in zip(cols, metric_cols):
-        value = latest_data[col_name].item(0)
+        cols = st.columns(len(metric_cols))
 
-        if col_name == "# Stocks":
-            col_container.metric(col_name, f"{int(value)}")
-        else:
-            col_container.metric(col_name, f"{value:.2f}%")
+        for col_container, col_name in zip(cols, metric_cols):
+            value = latest_data[col_name].item(0)
 
-    st.markdown("---")
+            if col_name == "# Stocks":
+                col_container.metric(col_name, f"{int(value)}")
+            else:
+                col_container.metric(col_name, f"{value:.2f}%")
 
-    # Market Breadth Table
-    st.subheader(f"Breadth History (Last {breadth_df.height} Days)")
-    st.dataframe(breadth_df.to_pandas(), width="stretch", hide_index=True)
+        st.markdown("---")
 
-    st.markdown("---")
-    # Market Breadth Graph
-    render_breadth_chart(breadth_df=breadth_df)
+        # Market Breadth Table
+        st.subheader(f"Breadth History (Last {breadth_df.height} Days)")
+        st.dataframe(breadth_df.head(10).to_pandas(), width="stretch", hide_index=True)
+
+        st.markdown("---")
+        # Market Breadth Graph
+        render_breadth_chart(breadth_df=breadth_df)
+
+    with tabs[1]:
+        st.dataframe(regime_df.head(10).to_pandas(), width="stretch", hide_index=True)

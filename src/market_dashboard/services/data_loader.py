@@ -39,8 +39,15 @@ def load_mkt_breadth_data(date: str):
     path = ComputeConfig.DATA_PATH / date
 
     mkt_breadth_df = pl.read_csv(path / ComputeConfig.MKT_BREADTH_PATH)
+    mkt_regime_df = (
+        pl.scan_csv(path / ComputeConfig.MKT_REGIME_PATH)
+        .sort("timestamp", descending=True)
+        .select(cs.date(), cs.string())
+        .head(50)
+        .collect()
+    )
 
-    return mkt_breadth_df
+    return mkt_breadth_df, mkt_regime_df
 
 
 @st.cache_data
