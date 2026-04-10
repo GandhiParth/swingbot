@@ -31,7 +31,7 @@ selected_date = st.sidebar.selectbox("Select Date", dates)
 # ------------------------------------------------
 
 indices_df, stocks_df = load_mkt_db_data(selected_date)
-mkt_breadth_df = load_mkt_breadth_data(selected_date)
+mkt_breadth_df, mkt_regime_df = load_mkt_breadth_data(selected_date)
 long_scanner_df, short_scanner_df = load_scanner_data(selected_date)
 
 st.header(f"Market Data: {selected_date}")
@@ -46,7 +46,7 @@ with tabs[0]:
     render_overview(stocks_df=stocks_df, indices_df=indices_df)
 
 with tabs[1]:
-    render_breadth(breadth_df=mkt_breadth_df)
+    render_breadth(breadth_df=mkt_breadth_df, regime_df=mkt_regime_df)
 
 with tabs[2]:
     render_scanner(long_scanner_df=long_scanner_df, short_scanner_df=short_scanner_df)

@@ -8,7 +8,7 @@ class EditConfig:
     DB_PATH = DATA_PATH / "data.db"
     DB_CONN = f"sqlite:///{DB_PATH}"
     HIST_DATA_START_LOOKBACK = 3
-    HIST_DATA_MONTHS_LOOKBACK = 9
+    HIST_DATA_MONTHS_LOOKBACK = 15
 
 
 class KiteConfig(EditConfig):

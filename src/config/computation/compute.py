@@ -15,8 +15,9 @@ class ComputeConfig(EditConfig):
     MKT_DB_STOCKS_PATH = "market_dashboard_stocks_data.csv"
     MKT_DB_INDICES_PATH = "market_dashboard_indices_data.csv"
 
-    MKT_BREADTH_DAYS = 10
+    MKT_BREADTH_DAYS = 21
     MKT_BREADTH_PATH = "market_breadth_lookback_data.csv"
+    MKT_REGIME_PATH = "market_regime_lookback_data.csv"
 
     BASIC_SCAN_PATH = "basic_scan_data.csv"
     BASIC_FILTER_PATH = "basic_filter_data.csv"

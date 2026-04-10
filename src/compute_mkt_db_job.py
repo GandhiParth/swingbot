@@ -11,6 +11,7 @@ from computation.compute import (
     gen_scanner_data,
     gen_short_scanner_data,
 )
+from computation.market_breadth import compute_breadth
 from config.base import StorageConfig
 from config.computation.compute import ComputeConfig
 from config.ingestion.brokers import KiteConfig
@@ -112,6 +113,9 @@ if __name__ == "__main__":
 
     mkt_breadth_df = gen_market_breadth_data(stocks_df=stocks_df)
     mkt_breadth_df.sink_csv(save_path / ComputeConfig.MKT_BREADTH_PATH)
+
+    mkt_regime_df = compute_breadth(data=stocks_df)
+    mkt_regime_df.sink_csv(save_path / ComputeConfig.MKT_REGIME_PATH)
 
     ## Get Scanners & Filters
     scanner_df_dict = gen_scanner_data(
