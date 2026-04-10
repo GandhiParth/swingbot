@@ -47,6 +47,13 @@ def load_mkt_breadth_data(date: str):
         .collect()
     )
 
+    mkt_regime_df = (
+        mkt_regime_df.lazy()
+        .rename({i: i.replace("_", " ").upper() for i in mkt_regime_df.columns})
+        .with_columns(cs.float().round(2))
+        .collect()
+    )
+
     return mkt_breadth_df, mkt_regime_df
 
 
