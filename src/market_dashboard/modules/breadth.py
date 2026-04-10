@@ -68,4 +68,6 @@ def render(breadth_df: pl.DataFrame, regime_df: pl.DataFrame):
         render_breadth_chart(breadth_df=breadth_df)
 
     with tabs[1]:
-        st.dataframe(regime_df.head(10).to_pandas(), width="stretch", hide_index=True)
+        st.dataframe(
+            regime_df.to_pandas(), width="stretch", hide_index=True, height="content"
+        )
