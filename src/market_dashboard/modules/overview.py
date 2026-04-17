@@ -1,6 +1,7 @@
 import plotly.express as px
 import polars as pl
 import streamlit as st
+import polars.selectors as cs
 
 from utils import color_returns
 
@@ -164,7 +165,11 @@ def render_heatmap(stocks_df: pl.DataFrame):
             with col:
                 st.subheader(index)
 
-                stocks = stocks_df.filter((pl.col("index_name") == index)).to_pandas()
+                stocks = (
+                    stocks_df.with_columns(cs.float().round(2))
+                    .filter((pl.col("index_name") == index))
+                    .to_pandas()
+                )
 
                 fig = px.treemap(
                     stocks,
