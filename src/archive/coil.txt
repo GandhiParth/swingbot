@@ -1,0 +1,125 @@
+Here's the complete calculation guide, step by step.
+
+STEP 1 — Compute the four moving averages
+At each bar, calculate:
+
+EMA 10: exponential moving average of close over 10 periods
+EMA 21: exponential moving average of close over 21 periods
+SMA 50: simple moving average of close over 50 periods
+SMA 200: simple moving average of close over 200 periods
+
+The EMA formula uses a smoothing multiplier: k = 2 / (period + 1). Each new EMA value is close × k + previous EMA × (1 - k). The SMA is the arithmetic mean of the last N closes.
+You need at least 200 bars of data before all four MAs are valid. Everything before that is discarded.
+
+STEP 2 — Compute ATR(14) at each bar
+True range for each bar is the greatest of: high - low, |high - previous close|, |low - previous close|. ATR(14) is the 14-period simple moving average of true range.
+This will be used later for normalization.
+
+STEP 3 — Compute the MA dispersion series
+At each bar, you have four MA values. Treat them as a set of four numbers and compute their standard deviation.
+dispersion_raw = std(EMA10, EMA21, SMA50, SMA200)
+Where std is the population standard deviation:
+std = sqrt( (1/4) × Σ(MAi - mean)² )
+and mean = (EMA10 + EMA21 + SMA50 + SMA200) / 4
+This gives you a single number at each bar representing how spread apart the four MAs are. When the MAs are far apart, this number is large. When they cluster together, it shrinks toward zero.
+Now normalize it by ATR to make it comparable across stocks:
+dispersion = dispersion_raw / ATR(14)
+The result is expressed in "ATR units." A dispersion of 3.0 means the MAs are spread by roughly 3 times the stock's average daily movement. A dispersion of 0.5 means they're within half a typical daily move of each other — very tight.
+This dispersion series is the foundation. Every subsequent step operates on this series.
+
+STEP 4 — Smooth the dispersion series
+The raw dispersion series has day-to-day noise. A single bar with an unusual candle can nudge one MA slightly, creating a small bump. To detect structural convergence rather than noise, apply a simple moving average to the dispersion series itself.
+smoothed_dispersion = SMA(dispersion, 5)
+A 5-period SMA is enough to remove daily jitter without lagging significantly. You now have a smoothed curve that represents the underlying trend in MA dispersion.
+All subsequent steps use this smoothed dispersion, not the raw.
+
+STEP 5 — Compute the rolling slope of the smoothed dispersion
+At each bar, fit a straight line through the most recent 10 values of smoothed dispersion using linear regression.
+For a window of 10 values at positions x = 0, 1, 2, ..., 9 with corresponding smoothed dispersion values y₀, y₁, ..., y₉:
+slope = (N × Σ(xi × yi) - Σxi × Σyi) / (N × Σxi² - (Σxi)²)
+where N = 10.
+This gives you the slope at each bar. When slope is negative, the dispersion is declining at that point — the MAs are converging. When slope is positive or zero, they're spreading or flat.
+The choice of 10 for the rolling slope window is deliberate. Shorter (say 5) would react to minor wiggles and flip signs too often. Longer (say 20) would lag and miss the true start of convergence. Ten bars gives you roughly two weeks of trading data, which is enough to confirm a real directional change in the dispersion without significant delay.
+
+STEP 6 — Detect where convergence started
+Starting from today, walk backward through the rolling slope series. Today the slope should be negative (that's a prerequisite — if the slope today isn't negative, the stock is not currently converging and you stop here, no coil detected).
+Moving backward, find the most recent bar where the slope was zero or positive. The bar immediately after that — where the slope first turned negative and stayed negative — is the coil start date.
+More precisely: starting from today at index T, scan backward. At each index i, check if the rolling slope is >= 0. The first such index you find, call it P. The coil start date is P + 1. The coil duration is T - P, expressed in trading days.
+Handling brief interruptions: During a real coil, the slope might briefly flip to zero or slightly positive for a day or two due to noise, even after smoothing. To prevent this from prematurely ending your backward scan, allow a tolerance: if the slope is non-negative for 1–2 consecutive bars but then resumes negative, keep scanning backward. Only stop when you find 3 or more consecutive bars of non-negative slope — that's a genuine break in convergence, not noise.
+The tolerance of 3 bars comes from the smoothing. Since you already smoothed the dispersion with a 5-bar SMA, true structural changes will persist for more than 2 bars. A 1-2 bar flicker after smoothing is residual noise.
+Apply duration bounds:
+If the detected duration is less than 10 days, the coil is too young to be reliable. Flag it as "emerging" but don't score it as a confirmed coil.
+If the detected duration exceeds 60 days, cap the analysis window at 60 days. A convergence lasting longer than that is likely not a coil preceding a breakout — it's a stock that has gone dead and the MAs are just slowly decaying toward each other. The energy interpretation doesn't hold for very long durations because there's no recent trend energy being stored — it dissipated long ago.
+
+STEP 7 — Measure convergence rate (slope over the full coil window)
+Now fit a linear regression through all the smoothed dispersion values from coil start to today. Not just the slope at one point, but the overall slope across the entire detected window.
+If the coil window is D days, you have D values of smoothed dispersion. Fit a line through all D of them:
+convergence_rate = slope of linear regression through all D values
+This will be a negative number. Its magnitude tells you how fast the MAs are coming together. A slope of -0.08 means dispersion is dropping by 0.08 ATR units per day. A slope of -0.02 means it's creeping together slowly.
+To make this more interpretable, express it as percentage contraction per day:
+pct_rate = |convergence_rate| / dispersion_at_coil_start × 100
+This tells you what fraction of the initial spread is being absorbed each day. A rate of 3% per day means roughly 3% of the starting gap closes daily.
+
+STEP 8 — Measure convergence consistency (R²)
+Using the same linear regression from Step 7, compute R²:
+R² = 1 - (SS_res / SS_tot)
+where:
+SS_res = Σ(yi - ŷi)² — sum of squared differences between actual dispersion values and the regression line's predicted values
+SS_tot = Σ(yi - ȳ)² — sum of squared differences between actual values and their mean
+R² ranges from 0 to 1. A value of 0.85 means 85% of the variation in dispersion over the coil window is explained by the linear decline — it's a clean, orderly convergence. A value of 0.4 means the dispersion did decline overall but the path was noisy and irregular.
+For swing trading, R² above 0.70 indicates a clean coil. Above 0.85 is excellent. Below 0.50 means the convergence exists statistically but doesn't have the orderly character you see in textbook coils.
+
+STEP 9 — Measure current tightness (percentile)
+This answers: how tight is the dispersion right now compared to this stock's own history?
+Take the smoothed dispersion value today and compare it to all smoothed dispersion values over the past 252 trading days (one year).
+tightness_percentile = (number of historical values that are GREATER than today's value) / 252 × 100
+A percentile of 95 means today's dispersion is tighter than 95% of the past year — the MAs are unusually clustered. A percentile of 50 means it's at a normal level — nothing special.
+This is critical because convergence rate and R² tell you the coil is happening and it's clean, but they don't tell you how far along it is. A stock can be converging beautifully but still have dispersion at the 40th percentile — meaning it has a lot more room to tighten. Another stock might have a modest convergence rate but dispersion is already at the 95th percentile of tightness — it's near the point where something has to give.
+For identifying setups near resolution, you want high percentile (above 80). For watchlist candidates where the coil is still developing, anything above 50 with a confirmed convergence trend is worth tracking.
+
+STEP 10 — Classify the coil stage
+Based on the duration and tightness, classify each stock into one of three stages:
+Emerging coil: Duration between 10 and 18 days, or tightness percentile between 50 and 70. The convergence is real and confirmed but it's early. The spring is starting to wind. This is a watchlist add.
+Active coil: Duration between 18 and 40 days, or tightness percentile between 70 and 85. The convergence has been sustained and the MAs are getting meaningfully tight. The spring is wound and building tension. This is an active monitoring candidate — watch for volume expansion.
+Mature coil: Duration above 25 days AND tightness percentile above 85. The convergence has been going on for a significant period and the MAs are extremely tight for this stock. The spring is near maximum compression. This is the highest priority — resolution could come any day.
+Note the "and" vs "or" distinction. Emerging and active can qualify on either duration or tightness alone. Mature requires both — a long convergence that has also produced extreme tightness. A 40-day convergence where the MAs are still only at the 60th percentile of tightness isn't mature — it's slow and may not resolve cleanly.
+
+STEP 11 — Compute composite coil score
+Combine the four measurable quantities into a single score ranging from 0 to 100.
+Component 1 — Convergence rate (25 points):
+Normalize the percentage rate per day across the scan results. The stock with the fastest convergence rate gets 25 points. The slowest gets 0. Linear interpolation between them. If scanning a single stock, compare to a reference range: a rate below 1% per day scores 0, above 4% per day scores 25, linear in between.
+Component 2 — Consistency / R² (25 points):
+points = R² × 25
+Since R² already ranges from 0 to 1, this maps directly. An R² of 0.80 gives 20 points.
+Component 3 — Tightness percentile (30 points):
+points = (tightness_percentile / 100) × 30
+A stock at the 90th percentile gets 27 points. This component gets the highest weight because tightness is the most direct measure of stored energy — a tight coil is more actionable than a fast but still loose convergence.
+Component 4 — Duration (20 points):
+Use a bell curve weighting that peaks at 25-35 days and tapers off below 15 and above 50.
+duration_score = 20 × bell_function(duration)
+Where the bell function peaks at 30 days and reaches zero at 10 and 60. Specifically:
+If duration is between 10 and 30: bell = (duration - 10) / 20
+If duration is between 30 and 60: bell = (60 - duration) / 30
+Otherwise: bell = 0
+Multiply by 20 for the points.
+This rewards the sweet spot. Too short means the coil is unproven. Too long means energy may have dissipated. A 30-day coil gets maximum duration credit.
+Total coil score = Component 1 + Component 2 + Component 3 + Component 4
+
+SUMMARY OF INPUTS AND OUTPUTS:
+Inputs at each bar: four MA values, ATR(14), and 252 days of history for percentile calculation.
+Intermediate series: raw dispersion, smoothed dispersion, rolling slope.
+Detection output: coil start date and duration in days.
+Quality outputs: convergence rate (% per day), R² (0 to 1), tightness percentile (0 to 100).
+Classification: emerging, active, or mature.
+Final output: composite coil score (0 to 100).
+
+What do you want to refine or challenge in this?can you provide python code for it and use polars and not pandas12:37 PMImprovised polars implementation despite network constraintsImprovised polars implementation despite network constraintsNo network access here to install polars, but I'll write the complete code for you to run in your own environment. Let me build it out following every step of the guide.Prepared to substitute Polars for Pandas implementationPrepared to substitute Polars for Pandas implementationThe code follows every step from the guide. Here's how to run it:
+bashpip install polars numpy
+
+# Basic scan
+python coil_detector.py --db market.db --watchlist AAPL,MSFT,NVDA,TSLA --verbose
+
+# From file, relaxed MA requirement
+python coil_detector.py --db market.db --watchlist-file tickers.txt --no-ma-stacking
+It expects a table named ohlcv with columns timestamp, symbol, open, high, low, close, volume. Adjust the query in load_ohlcv() if your schema differs.
+The output groups results by stage (mature → active → emerging) and shows the score, coil duration, convergence rate, R², tightness percentile, and current dispersion for each stock. Every parameter is tunable via CoilConfig or CLI flags.Coil detectorPY Download

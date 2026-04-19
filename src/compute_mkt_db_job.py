@@ -10,6 +10,7 @@ from computation.compute import (
     gen_market_dashboard_data,
     gen_scanner_data,
     gen_short_scanner_data,
+    cal_dispersion_score,
 )
 from computation.market_breadth import compute_breadth
 from config.base import StorageConfig
@@ -143,3 +144,9 @@ if __name__ == "__main__":
         end_date=end_date,
     )
     stocks_rs_df.sink_csv(save_path / ComputeConfig.STOCKS_RS_PATH)
+    logger.info("Stocks RS Calculated")
+
+    ## Calculate Stocks Dispersion Score
+    stocks_dsp_df = cal_dispersion_score(data=stocks_df, atr_lag=14, end_date=end_date)
+    stocks_dsp_df.sink_csv(save_path / ComputeConfig.STOCKS_DSP_PATH)
+    logger.info("Stocks Dispersion Score Calculated")

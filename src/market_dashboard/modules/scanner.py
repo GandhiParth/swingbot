@@ -9,16 +9,23 @@ def init_state_long(long_scanner_df: pl.DataFrame):
 
     if "selected_sectors_long" not in st.session_state:
         st.session_state.selected_sectors_long = (
-            long_scanner_df.get_column("SECTOR").unique().to_list()
+            long_scanner_df.lazy()
+            .group_by("SECTOR")
+            .len()
+            .sort("len", descending=True)
+            .head(5)
+            .collect()
+            .get_column("SECTOR")
+            .to_list()
         )
 
     if "selected_min_adr" not in st.session_state:
         st.session_state.selected_min_adr = 3.5
 
     if "selected_min_rss_score" not in st.session_state:
-        st.session_state.selected_min_rss_score = long_scanner_df.get_column(
-            "RSS SCORE"
-        ).min()
+        st.session_state.selected_min_rss_score = max(
+            long_scanner_df.get_column("RSS SCORE").min(), 70
+        )
 
 
 def render_filters_long(long_scanner_df: pl.DataFrame):
@@ -41,7 +48,7 @@ def render_filters_long(long_scanner_df: pl.DataFrame):
 
     with cols2:
         st.slider(
-            "RSS SCORE",
+            "MIN RSS SCORE",
             min_value=long_scanner_df.get_column("RSS SCORE").min(),
             max_value=long_scanner_df.get_column("RSS SCORE").max(),
             key="selected_min_rss_score",
@@ -230,9 +237,9 @@ def init_state_short(short_scanner_df: pl.DataFrame):
         st.session_state.selected_min_adr_short = 3.5
 
     if "selected_max_rss_score" not in st.session_state:
-        st.session_state.selected_max_rss_score = short_scanner_df.get_column(
-            "RSS SCORE"
-        ).max()
+        st.session_state.selected_max_rss_score = min(
+            short_scanner_df.get_column("RSS SCORE").max(), 40
+        )
 
 
 def render_filters_short(short_scanner_df: pl.DataFrame):
@@ -255,7 +262,7 @@ def render_filters_short(short_scanner_df: pl.DataFrame):
 
     with cols2:
         st.slider(
-            "RSS SCORE",
+            "MAX RSS SCORE",
             min_value=short_scanner_df.get_column("RSS SCORE").min(),
             max_value=short_scanner_df.get_column("RSS SCORE").max(),
             key="selected_max_rss_score",

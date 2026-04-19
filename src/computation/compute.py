@@ -436,3 +436,68 @@ def gen_short_scanner_data(
     )
     res_dict["final_res"] = final_res
     return res_dict
+
+
+def cal_dispersion_score(
+    data: pl.LazyFrame, atr_lag: int, end_date: datetime
+) -> pl.LazyFrame:
+    res = cal_atr(data=data, lag=atr_lag)
+
+    res = (
+        res.with_columns(pl.col("timestamp").cast(pl.Date()))
+        .with_columns(
+            [
+                pl.col("close")
+                .ewm_mean(alpha=2 / (n + 1))
+                .over(partition_by="symbol", order_by="timestamp", descending=False)
+                .round(2)
+                .alias(f"close_ema_{n}")
+                for n in IndicatorConfig.EMA_DAYS
+            ]
+            +
+            # Close SMA expression
+            [
+                pl.col("close")
+                .rolling_mean(window_size=n)
+                .over(partition_by="symbol", order_by="timestamp", descending=False)
+                .round(2)
+                .alias(f"close_sma_{n}")
+                for n in IndicatorConfig.SMA_DAYS
+            ]
+        )
+        .drop("close_sma_200")
+        .remove(pl.any_horizontal(pl.col("*").is_null()))
+        .with_columns(
+            pl.concat_list("close_ema_9", "close_ema_21", "close_sma_50", "close")
+            .list.std(ddof=0)
+            .round(4)
+            .alias("std")
+        )
+        .with_columns((pl.col("std") / pl.col("atr_14")).round(2).alias("dispersion"))
+        .with_columns(
+            pl.col("dispersion")
+            .rolling_mean(window_size=n)
+            .over(partition_by="symbol", order_by="timestamp", descending=False)
+            .round(2)
+            .alias(f"smooth_dispersion_{n}")
+            for n in [5, 10, 15, 20]
+        )
+        .with_columns(
+            (
+                pl.sum_horizontal(
+                    [
+                        (5 * pl.col("smooth_dispersion_5")),
+                        (10 * pl.col("smooth_dispersion_10")),
+                        (15 * pl.col("smooth_dispersion_15")),
+                        (20 * pl.col("smooth_dispersion_20")),
+                    ]
+                )
+                / (5 + 10 + 15 + 20)
+            )
+            .round(4)
+            .alias("dispersion_score")
+        )
+        .filter((pl.col("timestamp") == end_date))
+    )
+
+    return res
