@@ -1,7 +1,7 @@
 import plotly.express as px
 import polars as pl
-import streamlit as st
 import polars.selectors as cs
+import streamlit as st
 
 from utils import color_returns
 

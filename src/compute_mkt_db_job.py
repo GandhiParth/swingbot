@@ -5,12 +5,12 @@ from datetime import datetime, timedelta
 import polars as pl
 
 from computation.compute import (
+    cal_dispersion_score,
     cal_stocks_rs,
     gen_market_breadth_data,
     gen_market_dashboard_data,
     gen_scanner_data,
     gen_short_scanner_data,
-    cal_dispersion_score,
 )
 from computation.market_breadth import compute_breadth
 from config.base import StorageConfig
