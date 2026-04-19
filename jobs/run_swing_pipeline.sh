@@ -4,7 +4,7 @@ set -euo pipefail
 # -----------------------------
 # Defaults
 # -----------------------------
-ADR_CUTOFF_DEFAULT=3
+ADR_CUTOFF_DEFAULT=3.5
 RUN_MODES="0,1"
 
 # -----------------------------
